@@ -21,6 +21,9 @@ BUILD_DIR="$(/usr/bin/swift build --show-bin-path)"
 /bin/cp "$BUILD_DIR/Meth" "$BIN_DIR/Meth"
 /bin/cp "$BUILD_DIR/MethDealer" "$BIN_DIR/MethDealer"
 /bin/cp "$ROOT_DIR/script/install-power-access.sh" "$RESOURCE_DIR/install-power-access.sh"
+/usr/bin/sips -s format png "$ROOT_DIR/Assets/github-mark.svg" --out "$RESOURCE_DIR/github-mark.png" >/dev/null
+/usr/bin/sips -s format png "$ROOT_DIR/Assets/x-mark.svg" --out "$RESOURCE_DIR/x-mark.png" >/dev/null
+/bin/cp "$ROOT_DIR/Assets/OCTICONS-LICENSE.txt" "$RESOURCE_DIR/OCTICONS-LICENSE.txt"
 /bin/chmod 755 "$BIN_DIR/Meth" "$BIN_DIR/MethDealer" "$RESOURCE_DIR/install-power-access.sh"
 
 /bin/cat > "$CONTENTS/Info.plist" <<'PLIST'
