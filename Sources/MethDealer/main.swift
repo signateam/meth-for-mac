@@ -2,7 +2,7 @@ import Foundation
 import IOKit.ps
 import MethShared
 
-final class MethKeeper: NSObject {
+final class MethDealer: NSObject {
     private var powerSource: CFRunLoopSource?
 
     func run() {
@@ -11,7 +11,7 @@ final class MethKeeper: NSObject {
         reconcile()
         powerSource = IOPSNotificationCreateRunLoopSource({ context in
             guard let context else { return }
-            Unmanaged<MethKeeper>.fromOpaque(context).takeUnretainedValue().reconcile()
+            Unmanaged<MethDealer>.fromOpaque(context).takeUnretainedValue().reconcile()
         }, Unmanaged.passUnretained(self).toOpaque())?.takeRetainedValue()
         if let powerSource {
             CFRunLoopAddSource(CFRunLoopGetCurrent(), powerSource, .defaultMode)
@@ -39,4 +39,4 @@ final class MethKeeper: NSObject {
     }
 }
 
-MethKeeper().run()
+MethDealer().run()

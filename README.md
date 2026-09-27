@@ -4,19 +4,19 @@ Meth is a macOS 15+ menu bar app with three eye states:
 
 - **Off:** Meth makes no sleep request.
 - **Caffeinate:** Meth prevents idle system sleep while allowing the display to dim. This is the launch default.
-- **Meth:** Meth disables lid-close sleep. The built-in display goes dark when the lid is shut, while background work can continue. Meth stays on until you explicitly turn it off, including after reopening the lid.
+- **Meth:** Meth disables lid-close sleep. In this build, the built-in display stays on when the lid is shut. Meth stays on until you explicitly turn it off, including after reopening the lid.
 
 Left-click the eye for the menu. Right-click to toggle Meth. Settings contains Start at Login, the Caffeinate launch default, and the one-time closed-lid setup.
 
 ## Install
 
 1. Move `Meth.app` to `/Applications` and open it. The app has no Dock icon; look for the eye in the menu bar.
-2. Open **Settings → Set Up Closed-Lid Mode** and approve the macOS administrator prompt. Setup installs two narrowly scoped `pmset` permissions and a user background component. The background component re-applies Meth after power-source changes and completes an explicit turn-off request if the menu app closes mid-transition.
-3. Right-click the eye to turn Meth on. Right-click again to turn it off. The eye turns red only after macOS confirms the setting.
+2. Open **Settings → Set Up Closed-Lid Mode**. Read the screen-on explanation, then approve the macOS administrator prompt. Setup installs two narrowly scoped `pmset` permissions and Meth Dealer, a user background process. Meth Dealer re-applies Meth after power-source changes and completes an explicit turn-off request if the menu app closes mid-transition.
+3. Right-click the eye to turn Meth on. Right-click again to turn it off. The pupil turns red only after macOS confirms the setting.
 
 This is a local ad-hoc signed build. macOS may require you to use **Open** from Finder the first time. Do not move the app after closed-lid setup; repeat setup from the new location if you do.
 
-Meth uses a system-wide power setting for closed-lid mode. Other sleep-control apps can conflict with it. The setting may persist when the menu app is not running, so keep the app available and turn Meth off when you are done. A closed Mac that remains awake can consume battery and produce heat; do not run intensive work with it in a bag.
+Meth uses a system-wide power setting for closed-lid mode. Other sleep-control apps can conflict with it. The setting may persist when the menu app is not running, so keep the app available and turn Meth off when you are done. The screen stays on when closed with Meth active; that is required for this build's closed-lid mode. It can consume battery and produce heat, so keep the Mac ventilated and out of a bag.
 
 ## Build
 
@@ -24,7 +24,7 @@ Run `./script/build_and_run.sh`. The script builds both executables, creates `di
 
 ## Remove closed-lid setup
 
-Turn Meth off first. Remove `~/Library/LaunchAgents/com.toli.meth.keeper.plist` and unload its launch agent, then remove `/private/etc/sudoers.d/meth` with administrator approval. The app never removes the sleep override implicitly. Check that `SleepDisabled` is `No` before deleting the app.
+Turn Meth off first. Remove `~/Library/LaunchAgents/com.toli.meth.dealer.plist` and unload its launch agent, then remove `/private/etc/sudoers.d/meth` with administrator approval. The app never removes the sleep override implicitly. Check that `SleepDisabled` is `No` before deleting the app.
 
 ## Implementation notes
 

@@ -19,9 +19,9 @@ BUILD_DIR="$(/usr/bin/swift build --show-bin-path)"
 /bin/rm -rf "$APP_BUNDLE"
 /bin/mkdir -p "$BIN_DIR" "$RESOURCE_DIR" "$DIST_DIR"
 /bin/cp "$BUILD_DIR/Meth" "$BIN_DIR/Meth"
-/bin/cp "$BUILD_DIR/MethKeeper" "$BIN_DIR/MethKeeper"
+/bin/cp "$BUILD_DIR/MethDealer" "$BIN_DIR/MethDealer"
 /bin/cp "$ROOT_DIR/script/install-power-access.sh" "$RESOURCE_DIR/install-power-access.sh"
-/bin/chmod 755 "$BIN_DIR/Meth" "$BIN_DIR/MethKeeper" "$RESOURCE_DIR/install-power-access.sh"
+/bin/chmod 755 "$BIN_DIR/Meth" "$BIN_DIR/MethDealer" "$RESOURCE_DIR/install-power-access.sh"
 
 /bin/cat > "$CONTENTS/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>

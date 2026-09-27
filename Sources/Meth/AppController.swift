@@ -11,18 +11,22 @@ final class AppController: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+        ProcessInfo.processInfo.disableAutomaticTermination("Meth runs in the menu bar")
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         statusItem.button?.target = self
         statusItem.button?.action = #selector(statusClicked)
         statusItem.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
 
         caffeinate.setActive(MethPreferences.wanted || MethPreferences.caffeinateAtLaunch)
+        if let error = PowerAccessSetup.migrateLegacyAgentIfNeeded() { lastError = error }
         refreshStatus()
         Timer.scheduledTimer(timeInterval: 5, target: self, selector: #selector(pollStatus), userInfo: nil, repeats: true)
         if CommandLine.arguments.contains("--settings") {
             DispatchQueue.main.async { [weak self] in self?.openSettings() }
         }
     }
+
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
 
     @objc private func pollStatus() { refreshStatus() }
 
@@ -119,7 +123,7 @@ final class AppController: NSObject, NSApplicationDelegate {
         MethPreferences.wanted = false
         if let error = PowerTool.setSleepDisabled(false) {
             lastError = error
-            showError("Meth could not restore normal sleep yet. The background component will keep retrying. \(error)")
+            showError("Meth could not restore normal sleep yet. Meth Dealer will keep retrying. \(error)")
             refreshStatus()
             return false
         }
@@ -157,7 +161,7 @@ final class AppController: NSObject, NSApplicationDelegate {
 
     private func makeSettingsWindow() -> NSWindow {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 420, height: 265),
+            contentRect: NSRect(x: 0, y: 0, width: 420, height: 230),
             styleMask: [.titled, .closable, .miniaturizable],
             backing: .buffered,
             defer: false
@@ -186,10 +190,10 @@ final class AppController: NSObject, NSApplicationDelegate {
         setup.bezelStyle = .rounded
         stack.addArrangedSubview(setup)
 
-        let note = NSTextField(labelWithString: "Meth stays on until you turn it off, even if you reopen the lid. The built-in display turns off when closed. Keep the Mac ventilated.")
+        let note = NSTextField(labelWithString: "Meth stays on until you turn it off, even if you reopen the lid. The screen stays on with the lid closed. Keep your Mac ventilated and out of a bag.")
         note.textColor = .secondaryLabelColor
         note.lineBreakMode = .byWordWrapping
-        note.maximumNumberOfLines = 3
+        note.maximumNumberOfLines = 0
         note.preferredMaxLayoutWidth = 365
         stack.addArrangedSubview(note)
 
@@ -218,6 +222,12 @@ final class AppController: NSObject, NSApplicationDelegate {
     }
 
     @objc private func setupClosedLid() {
+        let explanation = NSAlert()
+        explanation.messageText = "Before setting up closed-lid mode"
+        explanation.informativeText = "Meth keeps the screen on when the lid is closed. This is required for closed-lid mode in this version and uses battery power. Keep your Mac ventilated and out of a bag.\n\nMeth Dealer must run in the background to keep closed-lid mode active through power changes and when the menu app closes. It starts at login after setup. Meth stays on until you turn it off.\n\nAfter setup, right-click the eye in the menu bar to turn on Meth."
+        explanation.addButton(withTitle: "Continue Setup")
+        explanation.addButton(withTitle: "Cancel")
+        guard explanation.runModal() == .alertFirstButtonReturn else { return }
         if let error = PowerAccessSetup.install() { showError(error) }
         else {
             let alert = NSAlert()

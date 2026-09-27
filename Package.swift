@@ -6,11 +6,11 @@ let package = Package(
     platforms: [.macOS(.v15)],
     products: [
         .executable(name: "Meth", targets: ["Meth"]),
-        .executable(name: "MethKeeper", targets: ["MethKeeper"]),
+        .executable(name: "MethDealer", targets: ["MethDealer"]),
     ],
     targets: [
         .target(name: "MethShared"),
         .executableTarget(name: "Meth", dependencies: ["MethShared"]),
-        .executableTarget(name: "MethKeeper", dependencies: ["MethShared"]),
+        .executableTarget(name: "MethDealer", dependencies: ["MethShared"]),
     ]
 )
