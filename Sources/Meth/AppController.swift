@@ -6,6 +6,8 @@ import ServiceManagement
 final class AppController: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
     private var settingsWindow: NSWindow?
+    private var setupButton: NSButton?
+    private var setupReadyLabel: NSTextField?
     private let caffeinate = CaffeinateController()
     private var lastError: String?
 
@@ -155,6 +157,7 @@ final class AppController: NSObject, NSApplicationDelegate {
 
     @objc private func openSettings() {
         if settingsWindow == nil { settingsWindow = makeSettingsWindow() }
+        refreshSetupControl()
         settingsWindow?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
@@ -188,7 +191,13 @@ final class AppController: NSObject, NSApplicationDelegate {
 
         let setup = NSButton(title: "Set Up Closed-Lid Mode…", target: self, action: #selector(setupClosedLid))
         setup.bezelStyle = .rounded
+        setupButton = setup
         stack.addArrangedSubview(setup)
+
+        let ready = NSTextField(labelWithString: "Closed-lid mode is ready")
+        ready.textColor = .secondaryLabelColor
+        setupReadyLabel = ready
+        stack.addArrangedSubview(ready)
 
         let note = NSTextField(labelWithString: "Meth stays on until you turn it off, even if you reopen the lid. The screen stays on with the lid closed. Keep your Mac ventilated and out of a bag.")
         note.textColor = .secondaryLabelColor
@@ -207,6 +216,15 @@ final class AppController: NSObject, NSApplicationDelegate {
         return window
     }
 
+    private func refreshSetupControl() {
+        let ready = PowerAccessSetup.isReady()
+        setupButton?.isHidden = ready
+        setupReadyLabel?.isHidden = !ready
+        if !ready {
+            setupButton?.title = PowerAccessSetup.hasPowerAccess() ? "Repair Closed-Lid Mode…" : "Set Up Closed-Lid Mode…"
+        }
+    }
+
     @objc private func changeLogin(_ sender: NSButton) {
         do {
             if sender.state == .on { try SMAppService.mainApp.register() }
@@ -222,13 +240,17 @@ final class AppController: NSObject, NSApplicationDelegate {
     }
 
     @objc private func setupClosedLid() {
+        let repairing = PowerAccessSetup.hasPowerAccess()
         let explanation = NSAlert()
-        explanation.messageText = "Before setting up closed-lid mode"
+        explanation.messageText = repairing ? "Repair closed-lid mode" : "Before setting up closed-lid mode"
         explanation.informativeText = "Meth keeps the screen on when the lid is closed. This is required for closed-lid mode in this version and uses battery power. Keep your Mac ventilated and out of a bag.\n\nMeth Dealer must run in the background to keep closed-lid mode active through power changes and when the menu app closes. It starts at login after setup. Meth stays on until you turn it off.\n\nAfter setup, right-click the eye in the menu bar to turn on Meth."
-        explanation.addButton(withTitle: "Continue Setup")
+        explanation.addButton(withTitle: repairing ? "Repair" : "Continue Setup")
         explanation.addButton(withTitle: "Cancel")
         guard explanation.runModal() == .alertFirstButtonReturn else { return }
-        if let error = PowerAccessSetup.install() { showError(error) }
+        let error = PowerAccessSetup.install()
+        refreshSetupControl()
+        if let error { showError(error) }
+        else if !PowerAccessSetup.isReady() { showError("Meth Dealer could not be verified after setup. Try again.") }
         else {
             let alert = NSAlert()
             alert.messageText = "Closed-lid mode is ready"

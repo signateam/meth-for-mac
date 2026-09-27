@@ -11,7 +11,27 @@ enum PowerAccessSetup {
         return installAgent()
     }
 
+    static func isReady() -> Bool {
+        guard let helper = Bundle.main.path(forAuxiliaryExecutable: "MethDealer"),
+              let data = try? Data(contentsOf: agentURL(agentLabel)),
+              let plist = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any],
+              plist["Label"] as? String == agentLabel,
+              plist["ProgramArguments"] as? [String] == [helper] else { return false }
+        let job = PowerTool.run("/bin/launchctl", ["print", "gui/\(getuid())/\(agentLabel)"])
+        return job.code == 0 && job.output.contains("program = \(helper)\n") && hasPowerAccess()
+    }
+
+    static func hasPowerAccess() -> Bool {
+        let result = PowerTool.run("/usr/bin/sudo", ["-n", "-l"])
+        guard result.code == 0 else { return false }
+        let permissions = result.output.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
+        return ["0", "1"].allSatisfy { value in
+            permissions.contains("(root) NOPASSWD: /usr/bin/pmset -a disablesleep \(value)")
+        }
+    }
+
     static func install() -> String? {
+        if hasPowerAccess() { return installAgent() }
         guard let script = Bundle.main.path(forResource: "install-power-access", ofType: "sh") else {
             return "The setup script is missing from Meth.app."
         }

@@ -6,15 +6,15 @@ Meth is a macOS 15+ menu bar app with three eye states:
 - **Caffeinate:** Meth prevents idle system sleep while allowing the display to dim. This is the launch default.
 - **Meth:** Meth disables lid-close sleep. In this build, the built-in display stays on when the lid is shut. Meth stays on until you explicitly turn it off, including after reopening the lid.
 
-Left-click the eye for the menu. Right-click to toggle Meth. Settings contains Start at Login, the Caffeinate launch default, and the one-time closed-lid setup.
+Left-click the eye for the menu. Right-click to toggle Meth. Settings contains Start at Login and the Caffeinate launch default. The closed-lid setup button is hidden once its power permission and Meth Dealer are ready; it reappears if either needs repair.
 
 ## Install
 
 1. Move `Meth.app` to `/Applications` and open it. The app has no Dock icon; look for the eye in the menu bar.
-2. Open **Settings → Set Up Closed-Lid Mode**. Read the screen-on explanation, then approve the macOS administrator prompt. Setup installs two narrowly scoped `pmset` permissions and Meth Dealer, a user background process. Meth Dealer re-applies Meth after power-source changes and completes an explicit turn-off request if the menu app closes mid-transition.
+2. Open **Settings → Set Up Closed-Lid Mode**. Read the screen-on explanation, then approve the macOS administrator prompt. Setup installs two narrowly scoped `pmset` permissions and Meth Dealer, a user background process. Meth Dealer re-applies Meth after power-source changes and completes an explicit turn-off request if the menu app closes mid-transition. Settings then shows that closed-lid mode is ready instead of the setup button.
 3. Right-click the eye to turn Meth on. Right-click again to turn it off. The pupil turns red only after macOS confirms the setting.
 
-This is a local ad-hoc signed build. macOS may require you to use **Open** from Finder the first time. Do not move the app after closed-lid setup; repeat setup from the new location if you do.
+This is a local ad-hoc signed build. macOS may require you to use **Open** from Finder the first time. If you move the app after setup, use **Repair Closed-Lid Mode** from its new location so Meth Dealer points to it. Repair reuses the existing power permission without another administrator prompt when that permission remains active.
 
 Meth uses a system-wide power setting for closed-lid mode. Other sleep-control apps can conflict with it. The setting may persist when the menu app is not running, so keep the app available and turn Meth off when you are done. The screen stays on when closed with Meth active; that is required for this build's closed-lid mode. It can consume battery and produce heat, so keep the Mac ventilated and out of a bag.
 
