@@ -7,9 +7,9 @@ Six square, 1200 × 1200 comparison images:
 3. `concept-3.png`: three-step Meth path, with Amphetamine's customization acknowledged.
 4. `concept-4.png`: editorial comparison table for readers evaluating both apps.
 5. `concept-5.png`: closed-laptop product poster with a compact comparison.
-6. `comparison-simple.png`: revised center split with larger logos above the names, “Vs” between them, Meth's two modes, and Amphetamine's feature list running off the bottom edge. This is the current recommended direction.
+6. `comparison-simple.png` (and `comparison-simple@2x.png`, 2400 × 2400): the current recommended direction. A light split with a hairline centre rule and “Vs”. Meth shows its icon, its name and just two large lines, “Caffeinate” and “Clamshell mode”. Amphetamine shows the same icon and name treatment above a dense grey list of its App Store features and Triggers that fades off the bottom edge. The source is `comparison.html`. Render it with headless Chrome at a 1200 × 1200 window, using device scale factor 1 or 2.
 
-`index.html` is the editable source. It opens the revised split by default. Add `?n=1` through `?n=5` to see the earlier concepts.
+`index.html` is the source for concepts 1 to 5. Use `?n=1` through `?n=5`. Its `#six` section is the previous version of the split.
 
 ## Source and claim notes
 
