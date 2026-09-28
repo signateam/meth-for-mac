@@ -10,7 +10,7 @@ body{font-family:-apple-system,"SF Pro Display","SF Pro Text","Helvetica Neue",A
 .glow{position:absolute;left:50%;top:218px;width:520px;height:420px;transform:translate(-50%,-50%);background:radial-gradient(closest-side,rgba(255,196,150,.34),rgba(255,210,180,.12) 55%,rgba(247,245,242,0));pointer-events:none}
 .icon{position:relative;width:200px;height:200px;display:block;margin:0 auto}
 .icon-wrap{position:relative;width:200px;height:200px;margin:0 auto}
-.crystal{position:absolute;right:-10px;bottom:-14px;width:116px;height:116px;transform:scaleX(-1) rotate(-24deg);filter:drop-shadow(0 10px 12px rgba(10,40,110,.35)) drop-shadow(0 2px 3px rgba(10,40,110,.3))}
+.crystal{position:absolute;right:-8px;bottom:-10px;width:108px;height:108px;transform:rotate(8deg);filter:drop-shadow(0 10px 12px rgba(10,40,110,.35)) drop-shadow(0 2px 3px rgba(10,40,110,.3))}
 .left .icon{filter:drop-shadow(0 22px 30px rgba(38,22,44,.26)) drop-shadow(0 4px 8px rgba(38,22,44,.12))}
 .right .icon{filter:drop-shadow(0 18px 26px rgba(60,40,40,.16)) drop-shadow(0 3px 6px rgba(60,40,40,.08))}
 .name{position:relative;font-family:-apple-system,"SF Pro Display",sans-serif;font-weight:790;letter-spacing:-.045em;font-size:80px;line-height:1;margin-top:40px}
@@ -30,22 +30,10 @@ body{font-family:-apple-system,"SF Pro Display","SF Pro Text","Helvetica Neue",A
   <div class="icon-wrap">
     <img class="icon" src="assets/meth-icon.png" alt="">
     <svg class="crystal" viewBox="0 0 100 100" aria-hidden="true">
-      <defs>
-        <linearGradient id="cL" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d6f4ff"/><stop offset=".5" stop-color="#6fcbff"/><stop offset="1" stop-color="#2a8ef0"/></linearGradient>
-        <linearGradient id="cR" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3aa6ff"/><stop offset="1" stop-color="#0c4fbf"/></linearGradient>
-        <linearGradient id="cB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2f86e8"/><stop offset="1" stop-color="#0a3a96"/></linearGradient>
-        <linearGradient id="cBL" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7fd6ff"/><stop offset="1" stop-color="#2d8cef"/></linearGradient>
-      </defs>
-      <!-- Smaller shard behind, to the right. -->
-      <polygon points="66,30 84,38 88,80 70,90 60,74" fill="url(#cB)"/>
-      <polygon points="66,30 60,74 70,90 72,52" fill="url(#cBL)" opacity=".85"/>
-      <!-- Main shard: a lit left face and a deeper right face meeting at a ridge. -->
-      <polygon points="46,2 28,20 24,72 42,98 46,52" fill="url(#cL)"/>
-      <polygon points="46,2 64,18 62,76 42,98 46,52" fill="url(#cR)"/>
-      <polygon points="46,2 28,20 46,52 64,18" fill="#e8f9ff" opacity=".55"/>
-      <polygon points="46,2 28,20 24,72 42,98 62,76 64,18" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="1.4" stroke-linejoin="round"/>
-      <path d="M46 2 46 52 42 98M28 20 46 52 64 18M24 72 46 52 62 76" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1"/>
-      <polygon points="32,24 40,14 38,44" fill="#fff" opacity=".6"/>
+      <polygon points="45.0,43.0 46.0,12.8 69.6,10.6" fill="#3aa0fa"/><polygon points="45.0,43.0 69.6,10.6 76.9,20.3" fill="#2782e7"/><polygon points="45.0,43.0 76.9,20.3 82.8,38.5" fill="#125ac2"/><polygon points="45.0,43.0 82.8,38.5 91.5,57.8" fill="#1052b8"/><polygon points="45.0,43.0 91.5,57.8 86.7,75.7" fill="#0a3a96"/><polygon points="45.0,43.0 86.7,75.7 70.3,78.0" fill="#0c419f"/><polygon points="45.0,43.0 70.3,78.0 52.9,94.7" fill="#0f4fb3"/><polygon points="45.0,43.0 52.9,94.7 38.8,85.1" fill="#0b3d9a"/><polygon points="45.0,43.0 38.8,85.1 29.6,78.4" fill="#0f4eb2"/><polygon points="45.0,43.0 29.6,78.4 13.0,79.5" fill="#1f76df"/><polygon points="45.0,43.0 13.0,79.5 5.3,52.2" fill="#3699f6"/><polygon points="45.0,43.0 5.3,52.2 19.4,34.4" fill="#92d0fd"/><polygon points="45.0,43.0 19.4,34.4 16.6,18.7" fill="#b1e1fe"/><polygon points="45.0,43.0 16.6,18.7 39.0,13.8" fill="#c8eeff"/><polygon points="45.0,43.0 39.0,13.8 46.0,12.8" fill="#72bffc"/>
+      <path d="M45.0,43.0 L46.0,12.8 M45.0,43.0 L69.6,10.6 M45.0,43.0 L76.9,20.3 M45.0,43.0 L82.8,38.5 M45.0,43.0 L91.5,57.8 M45.0,43.0 L86.7,75.7 M45.0,43.0 L70.3,78.0 M45.0,43.0 L52.9,94.7 M45.0,43.0 L38.8,85.1 M45.0,43.0 L29.6,78.4 M45.0,43.0 L13.0,79.5 M45.0,43.0 L5.3,52.2 M45.0,43.0 L19.4,34.4 M45.0,43.0 L16.6,18.7 M45.0,43.0 L39.0,13.8" fill="none" stroke="rgba(255,255,255,.25)" stroke-width=".8"/>
+      <polygon points="46.0,12.8 69.6,10.6 76.9,20.3 82.8,38.5 91.5,57.8 86.7,75.7 70.3,78.0 52.9,94.7 38.8,85.1 29.6,78.4 13.0,79.5 5.3,52.2 19.4,34.4 16.6,18.7 39.0,13.8" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="1.2" stroke-linejoin="round"/>
+      <circle cx="45" cy="43" r="2" fill="#fff" opacity=".8"/>
     </svg>
   </div>
   <div class="name">Meth</div>
