@@ -7,7 +7,7 @@ let seed = Number(seedArg);
 const rnd = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
 const R = (a, b) => a + (b - a) * rnd();
 const W = 220, H = 118, CAP = 26.5, BASE = 97, XH = 44, GLYPH = BASE - CAP;
-const DEPTH = GLYPH * 0.42;
+const DEPTH = GLYPH * 0.5;
 
 // Where each letter's top edge sits (M and the h stem reach cap height; e, t, h shoulder are lower).
 const topAt = (x) => (x < 80 ? CAP : x < 134 ? XH : x < 142 ? 34 : x < 166 ? XH : x < 184 ? CAP : XH);
@@ -18,7 +18,7 @@ function vein(x, y, ang, len, w0, depth, group) {
   let a = ang, s = 0, px = x, py = y;
   const phase = R(0, 6.28), freq = R(0.3, 0.6), amp = R(0.06, 0.12);
   const branches = [];
-  const nb = depth === 0 ? 1 + Math.floor(R(0, 3)) : depth === 1 ? (rnd() < 0.45 ? 1 : 0) : 0;
+  const nb = depth === 0 ? 2 + Math.floor(R(0, 3)) : depth === 1 ? (rnd() < 0.7 ? 1 : 0) : 0;
   for (let i = 0; i < nb; i++) branches.push(R(0.25, 0.7) * len);
   branches.sort((p, q) => p - q);
   const step = 1.4;
@@ -48,13 +48,13 @@ function vein(x, y, ang, len, w0, depth, group) {
 }
 
 // Top edge: roots just above each letter's top, heading down.
-for (let x = 4; x < W - 1; x += R(12, 18)) {
+for (let x = 3; x < W - 1; x += R(8, 12)) {
   const top = topAt(x), deep = top === CAP ? 1 : 0.7;
-  vein(x, top - 3, Math.PI / 2 + R(-0.5, 0.5), (DEPTH * R(0.55, 1) + 3) * deep, R(2.0, 2.6), 0, 't');
+  vein(x, top - 3, Math.PI / 2 + R(-0.5, 0.5), (DEPTH * R(0.6, 1.05) + 3) * deep, R(2.3, 3.1), 0, 't');
 }
 // Bottom edge: roots just below the baseline, heading up.
-for (let x = 8; x < W - 1; x += R(14, 20)) {
-  vein(x, BASE + 3, -Math.PI / 2 + R(-0.5, 0.5), DEPTH * R(0.5, 0.95) + 3, R(2.0, 2.6), 0, 'b');
+for (let x = 5; x < W - 1; x += R(9, 13)) {
+  vein(x, BASE + 3, -Math.PI / 2 + R(-0.5, 0.5), DEPTH * R(0.55, 1.0) + 3, R(2.3, 3.1), 0, 'b');
 }
 // A few from the outer sides of M and h.
 for (const y of [CAP + GLYPH * 0.28, CAP + GLYPH * 0.66]) vein(-1, y + R(-4, 4), (y < 60 ? 0.75 : -0.75) + R(-0.12, 0.12), 9, 1.2, 1, 'l');
@@ -62,7 +62,7 @@ for (const y of [CAP + GLYPH * 0.42, CAP + GLYPH * 0.78]) vein(W + 1, y + R(-4, 
 
 const grad = (id, x1, y1, x2, y2) => `<linearGradient id='${id}' gradientUnits='userSpaceOnUse' x1='${x1}' y1='${y1}' x2='${x2}' y2='${y2}'><stop offset='0' stop-color='%23ff3b30'/><stop offset='.55' stop-color='%23f0342c' stop-opacity='.95'/><stop offset='1' stop-color='%23e5322d' stop-opacity='0'/></linearGradient>`;
 const defs = grad('t', 0, CAP - 3, 0, CAP + DEPTH + 4) + grad('b', 0, BASE + 3, 0, BASE - DEPTH - 3) + grad('l', 0, 0, 20, 0) + grad('r', W, 0, W - 18, 0);
-const flush = `<linearGradient id='f' x1='0' y1='0' x2='0' y2='1'><stop offset='${(CAP - 2) / H}' stop-color='%23e5322d' stop-opacity='.18'/><stop offset='${(CAP + 9) / H}' stop-color='%23e5322d' stop-opacity='0'/><stop offset='${(BASE - 9) / H}' stop-color='%23e5322d' stop-opacity='0'/><stop offset='${(BASE + 2) / H}' stop-color='%23e5322d' stop-opacity='.18'/></linearGradient>`;
+const flush = `<linearGradient id='f' x1='0' y1='0' x2='0' y2='1'><stop offset='${(CAP - 2) / H}' stop-color='%23e5322d' stop-opacity='.3'/><stop offset='${(CAP + 9) / H}' stop-color='%23e5322d' stop-opacity='0'/><stop offset='${(BASE - 9) / H}' stop-color='%23e5322d' stop-opacity='0'/><stop offset='${(BASE + 2) / H}' stop-color='%23e5322d' stop-opacity='.3'/></linearGradient>`;
 const body = ['t', 'b', 'l', 'r'].map((g) => `<path fill='url(%23${g})' d='${polys.filter((p) => p.group === g).map((p) => p.d).join('')}'/>`).join('');
 const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${W} ${H}' preserveAspectRatio='none'><defs>${defs}</defs>${body}</svg>`;
 const uri = `url("data:image/svg+xml,${svg.replace(/</g, '%3C').replace(/>/g, '%3E')}")`;
