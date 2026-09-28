@@ -2,7 +2,7 @@
 *{margin:0;box-sizing:border-box}
 body{width:1200px;height:630px;background:#fafaf9;color:#111214;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif;-webkit-font-smoothing:antialiased;position:relative;overflow:hidden}
 h1{position:absolute;left:76px;top:50%;transform:translateY(-54%);font-size:134px;line-height:.94;letter-spacing:-.045em;font-weight:750;white-space:nowrap}
-.foot{position:absolute;left:84px;bottom:52px;display:flex;align-items:center;gap:12px;font-size:24px;font-weight:600;letter-spacing:-.01em;color:#6b6e73}
+.foot{position:absolute;left:78px;bottom:40px;display:flex;align-items:center;gap:16px;font-size:26px;font-weight:600;letter-spacing:-.01em;color:#6b6e73}
 
 /* the MacBook, from the site's hero, in dark space grey */
 .scene{position:absolute;left:652px;top:0;width:540px;height:630px;perspective:1500px;perspective-origin:50% 22%}
@@ -21,9 +21,10 @@ h1{position:absolute;left:76px;top:50%;transform:translateY(-54%);font-size:134p
 .display{height:100%;border-radius:6px;background:linear-gradient(#3a5fa0,#0d1422)}
 .lid-back{transform:translateZ(-7.2px) rotateY(180deg);background:linear-gradient(200deg,var(--alu-1),var(--alu-2));box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);display:grid;place-items:center}
 .lid-back svg{width:64px;opacity:.55}
+.foot .app{width:84px;height:84px;mix-blend-mode:multiply}
 </style></head><body>
 <h1>Meth for<br>your Mac.</h1>
-<div class="foot"><svg width="30" height="27" viewBox="0 0 21 19"><path d="M1.5 9.5C6 1 15 1 19.5 9.5C15 18 6 18 1.5 9.5Z" fill="none" stroke="#111214" stroke-width="1.65" stroke-linejoin="round"/><ellipse cx="10.5" cy="9.5" rx="2.4" ry="4.3" fill="#e5322d"/></svg>trymeth.com</div>
+<div class="foot"><img class="app" src="meth-icon-gem.png" alt="">trymeth.com</div>
 <div class="scene"><div class="laptop">
   <div class="shadow"></div>
   <div id="plies"></div>
