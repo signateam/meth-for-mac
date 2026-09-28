@@ -95,6 +95,11 @@
   main { flex: 1; display: flex; flex-direction: column; justify-content: center; max-width: 1200px; width: 100%; margin: 0 auto; padding: 32px 0; }
 
   /* ---------- hero ---------- */
+  .visitors { margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13.5px; color: var(--muted); }
+  .visitors b { color: var(--fg); font-weight: 650; font-variant-numeric: tabular-nums; }
+  .visitors .live { width: 7px; height: 7px; border-radius: 50%; background: #34c759; box-shadow: 0 0 0 0 rgba(52, 199, 89, .5); animation: live 2s infinite; }
+  @keyframes live { 70% { box-shadow: 0 0 0 7px rgba(52, 199, 89, 0); } 100% { box-shadow: 0 0 0 0 rgba(52, 199, 89, 0); } }
+  @media (prefers-reduced-motion: reduce) { .visitors .live { animation: none; } }
   .hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: clamp(32px, 5vw, 72px); align-items: center; }
   h1 { font-size: clamp(48px, 6.2vw, 84px); line-height: .98; letter-spacing: -0.045em; font-weight: 750; text-wrap: balance; }
   .tagline { margin-top: 22px; font-size: clamp(24px, 2.6vw, 34px); line-height: 1.15; letter-spacing: -0.03em; font-weight: 650; max-width: 20ch; text-wrap: balance; }
@@ -384,6 +389,7 @@
         <p class="share"><a href="https://x.com/intent/post?text=Meth%20for%20your%20Mac%3A%20keeps%20it%20awake%2C%20even%20with%20the%20lid%20closed.&amp;url=https%3A%2F%2Ftrymeth.com">Tell your friends about Meth →</a></p>
       </div>
 
+      <div class="visual-wrap">
       <div class="visual" id="visual">
         <div class="term" id="term" aria-hidden="true"><div class="status" id="status"></div></div>
 
@@ -433,6 +439,8 @@
           <button type="button" data-i="0">Without Meth</button>
           <button type="button" data-i="1">With Meth</button>
         </div>
+      </div>
+      <p class="visitors" id="visitors" hidden><span class="live" aria-hidden="true"></span><span id="visitorCount"></span></p>
       </div>
     </section>
   </main>
@@ -672,6 +680,18 @@
     if (visible) resumeAll(); else stopLoop();
   }).observe(visual);
   document.addEventListener('visibilitychange', () => { if (document.hidden) stopLoop(); else resumeAll(); });
+
+
+  // Visitors in the last 24 hours, from Cloudflare Web Analytics via /api/visitors.
+  fetch('/api/visitors', { signal: AbortSignal.timeout(4000) })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((d) => {
+      const n = d && Number.isInteger(d.visitors) ? d.visitors : 0;
+      if (n < 1) return;
+      $('visitorCount').innerHTML = `<b>${n.toLocaleString('en')}</b> ${n === 1 ? 'person' : 'people'} considered trying Meth in the last 24 hours`;
+      $('visitors').hidden = false;
+    })
+    .catch(() => {});
 
   setPhase(reduce ? 1 : 0);
 })();
