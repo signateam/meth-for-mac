@@ -17,17 +17,31 @@ public enum PowerTool {
     public static func setSleepDisabled(_ active: Bool) -> String? {
         let result = run("/usr/bin/sudo", ["-n", "/usr/bin/pmset", "-a", "disablesleep", active ? "1" : "0"])
         if result.code != 0 {
+            // Restoring sleep has succeeded if sleep is already allowed, even without the sudo rule.
+            if !active && sleepDisabled() == false { return nil }
             let detail = result.output.trimmingCharacters(in: .whitespacesAndNewlines)
             return detail.isEmpty ? "Power setting failed (exit \(result.code))." : detail
         }
-        guard sleepDisabled() == active else { return "macOS did not confirm the power setting." }
+        guard waitForSleepDisabled(active) else { return "macOS did not confirm the power setting." }
         return nil
     }
 
-    public static func run(_ executable: String, _ arguments: [String]) -> (code: Int32, output: String) {
+    /// IORegistry picks up a pmset change asynchronously, so poll until it matches.
+    public static func waitForSleepDisabled(_ active: Bool, timeout: TimeInterval = 2) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        while true {
+            if sleepDisabled() == active { return true }
+            if Date() >= deadline { return false }
+            Thread.sleep(forTimeInterval: 0.1)
+        }
+    }
+
+    /// Pass `environment` to replace the inherited environment instead of passing it on.
+    public static func run(_ executable: String, _ arguments: [String], environment: [String: String]? = nil) -> (code: Int32, output: String) {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: executable)
         process.arguments = arguments
+        if let environment { process.environment = environment }
         let pipe = Pipe()
         process.standardOutput = pipe
         process.standardError = pipe

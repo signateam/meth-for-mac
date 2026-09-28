@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meth: privacy</title>
+<meta name="description" content="Meth collects nothing. The only network call is the update check.">
+<meta name="theme-color" content="#fafaf9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e0e0d" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+<link rel="canonical" href="https://trymeth.com/privacy.html">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<script>(function(){var d=document.documentElement,t;try{t=localStorage.getItem('theme')}catch(e){}if(t!=='light'&&t!=='dark')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';d.dataset.theme=t})()</script>
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #fafaf9;
+    --fg: #111110;
+    --ink: var(--fg);
+    --muted: #6b6b66;
+    --faint: #8f8f89;
+    --line: #e4e4e0;
+    --card: #ffffff;
+    --red: #e5322d;
+    --btn-bg: #111110;
+    --btn-fg: #fafaf9;
+    --gut: clamp(16px, 4vw, 56px);
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0e0e0d;
+    --fg: #f2f2ef;
+    --muted: #9a9a94;
+    --faint: #6f6f6a;
+    --line: #262624;
+    --card: #151514;
+    --btn-bg: #f2f2ef;
+    --btn-fg: #0e0e0d;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0e0e0d;
+      --fg: #f2f2ef;
+      --muted: #9a9a94;
+      --faint: #6f6f6a;
+      --line: #262624;
+      --card: #151514;
+      --btn-bg: #f2f2ef;
+      --btn-fg: #0e0e0d;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font: 16px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    padding: 18px var(--gut) 16px;
+    overflow-x: hidden;
+  }
+  a { color: inherit; text-decoration: none; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--red); outline-offset: 3px; }
+  header { display: flex; justify-content: space-between; align-items: center; font-size: 14px; max-width: 1200px; width: 100%; margin: 0 auto; }
+  .brand { display: flex; align-items: center; gap: 9px; font-size: 18px; font-weight: 700; letter-spacing: -.015em; }
+  .brand svg { width: 30px; height: 27px; }
+  header nav { display: flex; gap: 14px; align-items: center; color: var(--muted); }
+  header nav a:hover { color: var(--fg); }
+  .theme-btn { display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--muted); cursor: pointer; transition: color .15s, background .15s; }
+  .theme-btn:hover { color: var(--fg); background: color-mix(in srgb, var(--fg) 7%, transparent); }
+  .theme-btn .sun, :root[data-theme="dark"] .theme-btn .moon { display: none; }
+  :root[data-theme="dark"] .theme-btn .sun { display: block; }
+  :root:not([data-theme]) .theme-btn { display: none; }
+
+  main { flex: 1; display: flex; flex-direction: column; justify-content: center; max-width: 640px; width: 100%; margin: 0 auto; padding: 56px 0; }
+  h1 { font-size: clamp(36px, 4.7vw, 56px); line-height: .98; letter-spacing: -0.045em; font-weight: 750; text-wrap: balance; }
+  .red { color: var(--red); }
+  .lede { margin-top: 20px; font-size: 19px; line-height: 1.45; color: var(--muted); }
+  h2 { margin-top: 36px; font-size: 17px; font-weight: 700; letter-spacing: -.02em; }
+  main p:not(.lede) { margin-top: 8px; color: var(--muted); }
+  main p a { color: var(--fg); font-weight: 600; }
+  main p a:hover { color: var(--red); }
+  code { font: 14px ui-monospace, "SF Mono", Menlo, monospace; color: var(--fg); }
+  .cta { margin-top: 28px; }
+  .btn { display: inline-flex; align-items: center; gap: 10px; background: var(--btn-bg); color: var(--btn-fg); padding: 14px 26px; border-radius: 999px; font-weight: 600; font-size: 16px; transition: transform .15s; }
+  .btn:hover { transform: translateY(-1px); }
+  .fine { font-size: 11.5px; line-height: 1.5; color: var(--faint); }
+  .fine a { color: inherit; text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 40%, transparent); text-underline-offset: 2px; }
+  .fine a:hover { color: var(--fg); }
+  .foot { display: grid; gap: 2px; justify-items: center; text-align: center; padding: 10px 0 0; }
+  .about { font-size: 13px; color: var(--faint); margin-bottom: 4px; text-wrap: balance; }
+  .foot-line { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px 18px; font-size: 13px; color: var(--muted); }
+  .foot-line a { text-decoration: none; }
+  .foot-line a:hover { color: var(--fg); }
+  .foot-line b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .maker { display: inline-flex; align-items: center; gap: 8px; }
+  .maker img { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; }
+  @media (prefers-reduced-motion: reduce) { .btn, .theme-btn { transition: none; } }
+</style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="/" aria-label="Meth home">
+      <svg viewBox="0 0 21 19" aria-hidden="true"><path d="M1.5 9.5C6 1 15 1 19.5 9.5C15 18 6 18 1.5 9.5Z" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/><ellipse cx="10.5" cy="9.5" rx="2.4" ry="4.3" fill="var(--red)"/></svg>
+      Meth
+    </a>
+    <nav>
+      <a href="https://github.com/tolimarchuk">GitHub</a>
+      <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch theme">
+        <svg class="moon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+        <svg class="sun" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
+    </nav>
+  </header>
+
+  <main>
+    <h1>We don't want your data. <span class="red">Just your sleep.</span></h1>
+    <p class="lede">Meth collects nothing about you or your Mac.</p>
+
+    <h2>The app</h2>
+    <p>No accounts, analytics, crash reporting or ads. Your mode and settings stay in your Mac's preferences and never leave it.</p>
+    <p>The one network request is the update check. Meth uses <a href="https://sparkle-project.org">Sparkle</a> to fetch <code>https://trymeth.com/appcast.xml</code> about once a day, and to download a new version when you choose to install it. That request carries only what any web request does: your IP address, plus Meth's version in the user agent.</p>
+    <p>Meth mode runs <code>pmset</code> on your Mac through a rule you approve with your admin password. Nothing about it is sent anywhere.</p>
+
+    <h2>This site</h2>
+    <p>No ads, no trackers and no cookies. The site uses Cloudflare Web Analytics, which counts page views without cookies or fingerprinting; Cloudflare adds its small analytics script to each page. The visitor count under the animation comes from those totals. The GoalBuddy star count in the footer is fetched from GitHub's public API, so GitHub sees that request and your IP address. The host may keep standard server logs to keep the lights on.</p>
+
+    <h2>Questions</h2>
+    <p>Ask <a href="https://x.com/tolibear_">@tolibear_</a>.</p>
+  </main>
+
+  <footer class="foot">
+    <p class="about">Meth is a simple Mac app that keeps your Mac running, even with the lid closed.</p>
+    <p class="foot-line">
+      <a class="maker" href="https://heysigna.com/?utm_source=trymeth.com&amp;utm_medium=referral&amp;utm_campaign=meth&amp;utm_content=footer"><img src="/maker.webp" width="22" height="22" alt="" loading="lazy" decoding="async">Built by Toli Marchuk at heysigna.com</a>
+      <a href="https://x.com/tolibear_">@tolibear_ on X</a>
+      <a href="https://goalbuddy.dev">From the maker of GoalBuddy · <b>★ <span id="gb-stars">800+</span></b></a>
+    </p>
+    <p class="fine">Independent project. Not affiliated with Apple. <a href="/privacy">Privacy</a></p>
+  </footer>
+
+<script>
+(() => {
+  const root = document.documentElement, btn = document.getElementById('themeBtn'), darkQ = matchMedia('(prefers-color-scheme: dark)');
+  const stored = () => { try { return localStorage.getItem('theme'); } catch (e) { return null; } };
+  const setTheme = (t) => { root.dataset.theme = t; btn.setAttribute('aria-label', t === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'); };
+  setTheme(root.dataset.theme || (darkQ.matches ? 'dark' : 'light'));
+  btn.addEventListener('click', () => {
+    const t = root.dataset.theme === 'dark' ? 'light' : 'dark';
+    setTheme(t);
+    try { localStorage.setItem('theme', t); } catch (e) {}
+  });
+  darkQ.addEventListener('change', (e) => { if (!stored()) setTheme(e.matches ? 'dark' : 'light'); });
+
+  const el = document.getElementById('gb-stars'), key = 'gb-stars';
+  try {
+    const hit = JSON.parse(sessionStorage.getItem(key) || 'null');
+    if (hit && Date.now() - hit.t < 600000) { el.textContent = hit.n.toLocaleString('en'); return; }
+  } catch (e) {}
+  fetch('https://api.github.com/repos/tolimarchuk/goalbuddy', { signal: AbortSignal.timeout(3000) })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((d) => {
+      if (!d || typeof d.stargazers_count !== 'number') return;
+      el.textContent = d.stargazers_count.toLocaleString('en');
+      try { sessionStorage.setItem(key, JSON.stringify({ n: d.stargazers_count, t: Date.now() })); } catch (e) {}
+    })
+    .catch(() => {});
+})();
+</script>
+</body>
+</html>
