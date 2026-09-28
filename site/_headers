@@ -1,3 +1,6 @@
+/*
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+
 /download/*.dmg
   Content-Type: application/x-apple-diskimage
   Content-Disposition: attachment
