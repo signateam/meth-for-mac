@@ -9,6 +9,8 @@ enum PowerAccessSetup {
     private static let registeredPathKey = "dealerRegisteredAppPath"
     private static let registeredVersionKey = "dealerRegisteredAppVersion"
     private static let safePath = "/usr/bin:/bin:/usr/sbin:/sbin"
+    /// Re-registering a dealer that will not start is tried once per launch, never in a loop.
+    @MainActor private static var repairAttempted = false
 
     /// Bundled at Contents/Library/LaunchAgents with a BundleProgram path, so launchd
     /// runs the helper from whichever copy of Meth.app registered it.
@@ -16,7 +18,7 @@ enum PowerAccessSetup {
 
     /// Replaces an old hand-written agent, re-points the dealer after Meth.app moves,
     /// and restarts it after an update so the new dealer code runs.
-    static func refreshDealerAtLaunch() -> String? {
+    @MainActor static func refreshDealerAtLaunch() -> String? {
         // A copy opened from a disk image or App Translocation must not take the
         // dealer away from the installed app; its path disappears on eject.
         guard !isTransientCopy() else { return nil }
@@ -29,7 +31,7 @@ enum PowerAccessSetup {
         guard dealer.status == .enabled else { return nil }
         if dealerMatchesThisApp() {
             restartDealerAfterUpdate()
-            return nil
+            return ensureDealerHealthy()
         }
         // Another copy (for example a development build) leaves an installed Meth.app alone.
         if let registered = UserDefaults.standard.string(forKey: registeredPathKey), isThisApp(atPath: registered) {
@@ -40,8 +42,53 @@ enum PowerAccessSetup {
 
     static func isReady() -> Bool {
         guard dealer.status == .enabled, dealerMatchesThisApp(), hasOwnRule() else { return false }
+        return dealerIsHealthy() && hasPowerAccess()
+    }
+
+    /// SMAppService can report .enabled for a registration launchd can no longer spawn
+    /// (for example one left by a deleted copy of Meth.app), so this checks the job itself.
+    /// Re-registers once per launch when the dealer is not running after a short grace period.
+    @MainActor static func ensureDealerHealthy() -> String? {
+        if waitForHealthyDealer() { return nil }
+        let notRunning = "Meth Dealer is not running, so Meth can’t keep closed-lid mode on safely. Open Settings and choose Repair Closed-Lid Mode…, or restart your Mac and try again."
+        if isTransientCopy() {
+            return "Meth Dealer is not running. Move Meth to your Applications folder and open it from there."
+        }
+        guard dealer.status == .enabled, !repairAttempted else { return notRunning }
+        repairAttempted = true
+        if let error = registerDealer() { return "\(error) \(notRunning)" }
+        return nil
+    }
+
+    /// Meth Dealer is KeepAlive, so a healthy one is always running. When this copy
+    /// registered it, the running process must also come from this copy's bundle.
+    static func dealerIsHealthy() -> Bool {
         let job = PowerTool.run("/bin/launchctl", ["print", "gui/\(getuid())/\(agentLabel)"])
-        return job.code == 0 && hasPowerAccess()
+        guard job.code == 0 else { return false }
+        let lines = job.output.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
+        guard lines.contains("state = running"), !lines.contains("job state = spawn failed") else { return false }
+        guard dealerMatchesThisApp(), !isTransientCopy() else { return true }
+        guard let pidLine = lines.first(where: { $0.hasPrefix("pid = ") }),
+              let pid = Int32(pidLine.dropFirst("pid = ".count)),
+              let path = executablePath(of: pid) else { return false }
+        let bundle = Bundle.main.bundleURL.resolvingSymlinksInPath().path
+        return URL(fileURLWithPath: path).resolvingSymlinksInPath().path.hasPrefix(bundle + "/")
+    }
+
+    private static func waitForHealthyDealer(timeout: TimeInterval = 2) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        while true {
+            if dealerIsHealthy() { return true }
+            if Date() >= deadline { return false }
+            Thread.sleep(forTimeInterval: 0.25)
+        }
+    }
+
+    private static func executablePath(of pid: Int32) -> String? {
+        var buffer = [UInt8](repeating: 0, count: Int(MAXPATHLEN) * 4)
+        let length = proc_pidpath(pid, &buffer, UInt32(buffer.count))
+        guard length > 0 else { return nil }
+        return String(decoding: buffer.prefix(Int(length)), as: UTF8.self)
     }
 
     /// True when anything closed-lid mode installed is still present.
@@ -59,7 +106,7 @@ enum PowerAccessSetup {
     }
 
     static func install() -> String? {
-        if Bundle.main.bundlePath.contains("/AppTranslocation/") {
+        if isTransientCopy() {
             return "Move Meth to your Applications folder and open it from there before setting up closed-lid mode."
         }
         if !(hasPowerAccess() && hasOwnRule()) {
@@ -108,9 +155,11 @@ enum PowerAccessSetup {
 
     private static func registerDealer() -> String? {
         let service = dealer
-        if service.status == .enabled && !dealerMatchesThisApp() {
-            // launchd keeps the old bundle location; re-registering points it here.
+        if service.status == .enabled && !(dealerMatchesThisApp() && dealerIsHealthy()) {
+            // launchd keeps the old bundle location, or a stale registration it cannot
+            // spawn (EX_CONFIG); re-registering points it at this copy.
             try? service.unregister()
+            waitForDealerJobToEnd()
         }
         var registerError: Error?
         if service.status != .enabled {
@@ -125,7 +174,21 @@ enum PowerAccessSetup {
         }
         UserDefaults.standard.set(Bundle.main.bundlePath, forKey: registeredPathKey)
         UserDefaults.standard.set(currentVersion, forKey: registeredVersionKey)
-        return retireLegacyAgents(in: "gui/\(getuid())")
+        if let error = retireLegacyAgents(in: "gui/\(getuid())") { return error }
+        guard waitForHealthyDealer(timeout: 3) else {
+            return "Meth Dealer is registered, but macOS did not start it."
+        }
+        return nil
+    }
+
+    /// unregister() returns before launchd removes the job; registering again too soon
+    /// can leave the stale job in place.
+    private static func waitForDealerJobToEnd(timeout: TimeInterval = 5) {
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline,
+              PowerTool.run("/bin/launchctl", ["print", "gui/\(getuid())/\(agentLabel)"]).code == 0 {
+            Thread.sleep(forTimeInterval: 0.2)
+        }
     }
 
     private static func dealerMatchesThisApp() -> Bool {

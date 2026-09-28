@@ -4,12 +4,12 @@
         <title>Meth</title>
         <item>
             <title>1.0.0</title>
-            <pubDate>Mon, 28 Sep 2026 10:07:58 -0400</pubDate>
+            <pubDate>Mon, 28 Sep 2026 10:27:36 -0400</pubDate>
             <link>https://trymeth.com</link>
-            <sparkle:version>2</sparkle:version>
+            <sparkle:version>3</sparkle:version>
             <sparkle:shortVersionString>1.0.0</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
-            <enclosure url="https://trymeth.com/download/Meth.dmg" length="2674404" type="application/octet-stream" sparkle:edSignature="Fo7XkOhmQtNNj6NoX0MgluglAVkmlIiddAhQDZuVmIwMqBzv6M/dJLDnZHOBwE/dTN0kANlAcRp3m4PGYVBcDA=="/>
+            <enclosure url="https://trymeth.com/download/Meth.dmg" length="3097500" type="application/octet-stream" sparkle:edSignature="FXRjC6ADuGdGyY9oRBPcukxyeuKekKCSeHM3bvY0tO46fxw8qUh4Jc7zqNtC4XUrqADC1USJT1RohaCc4xSiDg=="/>
         </item>
     </channel>
 </rss>

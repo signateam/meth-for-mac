@@ -67,15 +67,10 @@ final class AppController: NSObject, NSApplicationDelegate {
 
     private func makeMenu() -> NSMenu {
         let menu = NSMenu()
-        let actualMeth = MethPreferences.ownsOverride && PowerTool.sleepDisabled() == true
-        let statusTitle: String
-        if actualMeth { statusTitle = "Meth is on" }
-        else if MethPreferences.wanted { statusTitle = "Meth is being restored" }
-        else if caffeinate.isActive { statusTitle = "Caffeine is on" }
-        else { statusTitle = "Normal sleep" }
-        let status = NSMenuItem(title: statusTitle, action: nil, keyEquivalent: "")
-        status.isEnabled = false
-        menu.addItem(status)
+        let actualMeth = methIsActive()
+        let title = NSMenuItem(title: "Meth", action: nil, keyEquivalent: "")
+        title.isEnabled = false
+        menu.addItem(title)
         if !MethPreferences.wanted, let reason = MethPreferences.cutoffReason {
             let cutoff = NSMenuItem(title: reason, action: nil, keyEquivalent: "")
             cutoff.isEnabled = false
@@ -83,9 +78,10 @@ final class AppController: NSObject, NSApplicationDelegate {
         }
         menu.addItem(.separator())
 
-        addItem("Off", #selector(selectOff), to: menu, checked: !MethPreferences.wanted && !caffeinate.isActive)
-        addItem("Caffeine", #selector(selectCaffeinate), to: menu, checked: !MethPreferences.wanted && caffeinate.isActive)
-        addItem(MethPreferences.wanted ? "Turn Off Meth" : "Turn On Meth", #selector(toggleMeth), to: menu, checked: actualMeth)
+        // Checkmarks follow the actual power state, not the requested one.
+        addItem("Off", #selector(selectOff), to: menu, checked: !actualMeth && !caffeinate.isActive)
+        addItem("Caffeine", #selector(selectCaffeinate), to: menu, checked: !actualMeth && caffeinate.isActive)
+        addItem("Meth", #selector(selectMeth), to: menu, checked: actualMeth)
         if let lastError {
             menu.addItem(.separator())
             let item = NSMenuItem(title: "Meth needs attention…", action: #selector(showLastError), keyEquivalent: "")
@@ -94,10 +90,8 @@ final class AppController: NSObject, NSApplicationDelegate {
             menu.addItem(NSMenuItem(title: String(lastError.prefix(64)), action: nil, keyEquivalent: ""))
         }
         menu.addItem(.separator())
-        addItem("About Meth", #selector(openAbout), to: menu)
         addItem("Check for Updates…", #selector(checkForUpdates), to: menu)
         addItem("Settings…", #selector(openSettings), to: menu)
-        addItem("Help…", #selector(openHelp), to: menu)
         menu.addItem(.separator())
         addItem(MethPreferences.wanted || MethPreferences.ownsOverride ? "Turn Off Meth and Quit" : "Quit Meth", #selector(quit), to: menu)
         return menu
@@ -126,7 +120,8 @@ final class AppController: NSObject, NSApplicationDelegate {
         refreshStatus()
     }
 
-    @objc private func selectMethFromSettings() {
+    /// Choosing Meth while it is on does nothing; Off or Caffeine leaves it.
+    @objc private func selectMeth() {
         guard !MethPreferences.wanted && !MethPreferences.ownsOverride else {
             refreshModeControls()
             return
@@ -139,7 +134,7 @@ final class AppController: NSObject, NSApplicationDelegate {
     }
 
     @objc private func toggleMeth() {
-        if MethPreferences.wanted {
+        if MethPreferences.wanted || MethPreferences.ownsOverride {
             guard stopMethIfNeeded() else { return }
             caffeinate.setActive(MethPreferences.priorCaffeinate)
         } else {
@@ -158,6 +153,20 @@ final class AppController: NSObject, NSApplicationDelegate {
                 refreshModeControls()
                 return
             }
+            if !PowerAccessSetup.hasPowerAccess() {
+                lastError = "Closed-lid mode is not set up."
+                openSettings()
+                showError("Meth needs its one-time closed-lid setup before it can prevent lid-close sleep. Choose Set Up Closed-Lid Mode… in Settings.")
+                refreshStatus()
+                return
+            }
+            if let error = PowerAccessSetup.ensureDealerHealthy() {
+                lastError = error
+                openSettings()
+                showError(error)
+                refreshStatus()
+                return
+            }
             MethPreferences.cutoffReason = nil
             MethPreferences.priorCaffeinate = caffeinate.isActive
             caffeinate.setActive(true)
@@ -165,12 +174,14 @@ final class AppController: NSObject, NSApplicationDelegate {
             MethPreferences.wanted = true
             if let error = PowerTool.setSleepDisabled(true) {
                 MethPreferences.wanted = false
-                MethPreferences.ownsOverride = false
+                // pmset may have applied the setting even though macOS did not confirm it in time.
+                // Ownership is kept until sleep is restored, so Meth Dealer keeps retrying.
+                let restoreError = PowerTool.setSleepDisabled(false)
+                if restoreError == nil { MethPreferences.ownsOverride = false }
                 caffeinate.setActive(MethPreferences.priorCaffeinate)
                 lastError = error
-                openSettings()
-                showError("Meth needs its one-time power setup before it can prevent lid-close sleep. \(error)")
-                refreshModeControls()
+                showError("Meth could not turn on. \(error)" + (restoreError == nil ? "" : " Meth could not restore normal sleep yet. Meth Dealer will keep retrying."))
+                refreshStatus()
                 return
             }
         }
@@ -193,13 +204,17 @@ final class AppController: NSObject, NSApplicationDelegate {
 
     private func refreshStatus() {
         guard statusItem != nil else { return }
-        let active = MethPreferences.ownsOverride && PowerTool.sleepDisabled() == true
+        let active = methIsActive()
         let state: EyeIcon.State = active ? .meth : (caffeinate.isActive ? .caffeinate : .off)
         statusItem.button?.image = EyeIcon.make(state)
         statusItem.button?.toolTip = active ? "Meth: closed-lid sleep is off" :
             (MethPreferences.wanted ? "Meth: restoring closed-lid mode" :
              (caffeinate.isActive ? "Caffeine: idle sleep is off" : "Meth: normal sleep"))
         refreshModeControls()
+    }
+
+    private func methIsActive() -> Bool {
+        MethPreferences.ownsOverride && PowerTool.sleepDisabled() == true
     }
 
     @objc private func showLastError() {
@@ -224,7 +239,7 @@ final class AppController: NSObject, NSApplicationDelegate {
 
     private func makeSettingsWindow() -> NSWindow {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 460, height: 436),
+            contentRect: NSRect(x: 0, y: 0, width: 460, height: 468),
             styleMask: [.titled, .closable, .miniaturizable],
             backing: .buffered,
             defer: false
@@ -261,7 +276,7 @@ final class AppController: NSObject, NSApplicationDelegate {
         caffeineRadio = caffeine.button
         modes.addArrangedSubview(caffeine.view)
 
-        let meth = modeRow("Meth", detail: "Keeps the Mac awake with the lid closed. The screen stays on until you turn Meth off.", action: #selector(selectMethFromSettings), identifier: "mode-meth")
+        let meth = modeRow("Meth", detail: "Keeps the Mac awake with the lid closed. The screen stays on until you turn Meth off.", action: #selector(selectMeth), identifier: "mode-meth")
         methRadio = meth.button
         modes.addArrangedSubview(meth.view)
 
@@ -307,17 +322,27 @@ final class AppController: NSObject, NSApplicationDelegate {
         lowBattery.state = MethPreferences.lowBatteryCutoff ? .on : .off
         lowBattery.identifier = NSUserInterfaceItemIdentifier("low-battery")
         column.addArrangedSubview(lowBattery)
+        column.setCustomSpacing(18, after: lowBattery)
+
+        let version = NSTextField(labelWithString: versionText())
+        version.font = .systemFont(ofSize: 11)
+        version.textColor = .tertiaryLabelColor
+        let updates = linkButton("Check for Updates…", size: 11, color: .linkColor, action: #selector(checkForUpdates))
+        let about = NSStackView(views: [version, updates])
+        about.orientation = .horizontal
+        about.alignment = .firstBaseline
+        about.spacing = 10
+        column.addArrangedSubview(about)
 
         let footerDivider = separator()
         footerDivider.translatesAutoresizingMaskIntoConstraints = false
         content.addSubview(footerDivider)
 
-        let credit = NSTextField(labelWithString: "Built by Toli Marchuk")
-        credit.font = .systemFont(ofSize: 10)
-        credit.textColor = .tertiaryLabelColor
+        let credit = linkButton("trymeth.com · built by Toli Marchuk", size: 10, color: .tertiaryLabelColor, action: #selector(openWebsite))
+        credit.toolTip = "https://trymeth.com"
         let spacer = NSView()
         spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
-        let github = socialButton("github-mark", fallback: "chevron.left.forwardslash.chevron.right", label: "Toli Marchuk on GitHub", action: #selector(openGitHub))
+        let github = socialButton("github-mark", fallback: "chevron.left.forwardslash.chevron.right", label: "Meth on GitHub", action: #selector(openGitHub))
         let x = socialButton("x-mark", fallback: "xmark", label: "Toli Marchuk on X", action: #selector(openX))
         let footer = NSStackView(views: [credit, spacer, github, x])
         footer.orientation = .horizontal
@@ -373,6 +398,24 @@ final class AppController: NSObject, NSApplicationDelegate {
         return (row, button)
     }
 
+    private func versionText() -> String {
+        let info = Bundle.main.infoDictionary
+        let version = info?["CFBundleShortVersionString"] as? String ?? "?"
+        let build = info?["CFBundleVersion"] as? String ?? "?"
+        return "Version \(version) (\(build))"
+    }
+
+    private func linkButton(_ title: String, size: CGFloat, color: NSColor, action: Selector) -> NSButton {
+        let button = NSButton(title: title, target: self, action: action)
+        button.isBordered = false
+        button.attributedTitle = NSAttributedString(string: title, attributes: [
+            .font: NSFont.systemFont(ofSize: size),
+            .foregroundColor: color
+        ])
+        button.setAccessibilityLabel(title)
+        return button
+    }
+
     private func socialButton(_ asset: String, fallback: String, label: String, action: Selector) -> NSButton {
         let button = NSButton()
         button.target = self
@@ -404,15 +447,10 @@ final class AppController: NSObject, NSApplicationDelegate {
     }
 
     private func refreshModeControls() {
-        let methSelected = MethPreferences.wanted || MethPreferences.ownsOverride
-        offRadio?.state = !methSelected && !caffeinate.isActive ? .on : .off
-        caffeineRadio?.state = !methSelected && caffeinate.isActive ? .on : .off
-        methRadio?.state = methSelected ? .on : .off
-    }
-
-    @objc private func openAbout() {
-        NSApp.activate(ignoringOtherApps: true)
-        NSApp.orderFrontStandardAboutPanel(nil)
+        let methActive = methIsActive()
+        offRadio?.state = !methActive && !caffeinate.isActive ? .on : .off
+        caffeineRadio?.state = !methActive && caffeinate.isActive ? .on : .off
+        methRadio?.state = methActive ? .on : .off
     }
 
     @objc private func checkForUpdates() {
@@ -420,12 +458,12 @@ final class AppController: NSObject, NSApplicationDelegate {
         updaterController.checkForUpdates(nil)
     }
 
-    @objc private func openHelp() {
+    @objc private func openWebsite() {
         if let url = URL(string: "https://trymeth.com") { NSWorkspace.shared.open(url) }
     }
 
     @objc private func openGitHub() {
-        if let url = URL(string: "https://github.com/tolimarchuk") { NSWorkspace.shared.open(url) }
+        if let url = URL(string: "https://github.com/signateam/meth-for-mac") { NSWorkspace.shared.open(url) }
     }
 
     @objc private func openX() {

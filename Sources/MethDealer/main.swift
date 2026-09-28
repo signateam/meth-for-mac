@@ -51,6 +51,11 @@ final class MethDealer: NSObject {
         guard let actual = PowerTool.sleepDisabled() else { return }
         if wanted && !actual {
             _ = PowerTool.setSleepDisabled(true)
+            // The app may have turned Meth off while pmset ran. Undo it, and keep ownership
+            // if that fails, so no override is left that nothing will restore.
+            if !MethPreferences.wanted, PowerTool.setSleepDisabled(false) != nil {
+                MethPreferences.ownsOverride = true
+            }
         } else if !wanted && actual {
             if PowerTool.setSleepDisabled(false) == nil {
                 MethPreferences.ownsOverride = false
@@ -102,7 +107,7 @@ final class MethDealer: NSObject {
         if MethPreferences.wanted || MethPreferences.ownsOverride {
             MethPreferences.wanted = false
             // Stay registered and retry on the next check until sleep is restored.
-            guard PowerTool.setSleepDisabled(false) == nil || PowerTool.sleepDisabled() == false else { return }
+            guard PowerTool.setSleepDisabled(false) == nil else { return }
             MethPreferences.ownsOverride = false
         }
         MethPreferences.store.synchronize()
