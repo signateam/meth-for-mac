@@ -23,7 +23,7 @@ async function visitors(request, env, ctx) {
   const cache = caches.default;
   const key = new Request('https://trymeth.com/api/visitors');
   const cached = await cache.match(key);
-  if (cached) return fresh(await cached.text());
+  if (cached) return fresh(await cached.text(), cached.status);
 
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   const query = `{ viewer { accounts(filter: { accountTag: "${ACCOUNT}" }) {
@@ -43,13 +43,16 @@ async function visitors(request, env, ctx) {
   } catch {}
 
   if (count === null) {
-    return Response.json({ error: 'unavailable' }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
+    // Remember the failure briefly so a broken token doesn't send every page view to the API.
+    const body = JSON.stringify({ error: 'unavailable' });
+    ctx.waitUntil(cache.put(key, new Response(body, { status: 503, headers: { 'Cache-Control': 'max-age=30' } })));
+    return fresh(body, 503);
   }
   const body = JSON.stringify({ visitors: count, window: '24h' });
   ctx.waitUntil(cache.put(key, new Response(body, { headers: { 'Cache-Control': `max-age=${CACHE_SECONDS}` } })));
   return fresh(body);
 }
 
-function fresh(body) {
-  return new Response(body, { headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
+function fresh(body, status = 200) {
+  return new Response(body, { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
 }

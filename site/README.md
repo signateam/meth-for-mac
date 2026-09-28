@@ -8,8 +8,7 @@ The static site for Meth. There is no build step: everything in this folder is s
 | `privacy.html`, `404.html` | Privacy notice and not-found page. |
 | `download/Meth.dmg` | The notarized release, written by `script/release.sh`. |
 | `appcast.xml` | Sparkle update feed (`SUFeedURL`), written by `script/release.sh`. |
-| `CNAME` | `trymeth.com`, for GitHub Pages. |
-| `_headers` | Response headers for Cloudflare Pages. GitHub Pages ignores it. |
+| `_headers` | Response headers applied by Cloudflare (HSTS, DMG and appcast headers). |
 | `robots.txt`, `sitemap.xml`, `favicon.svg`, `og.png` | The usual. `art/og.html` is the source for `og.png`. |
 
 Preview locally:
@@ -25,13 +24,23 @@ The site is live on Cloudflare as the Worker `trymeth` (static assets), with
 Cloudflare account. `wrangler.jsonc` at the repo root holds the config.
 
 ```sh
-export CLOUDFLARE_ACCOUNT_ID=d801fe59adab888d7a28d3a7a7d181e4
-export CLOUDFLARE_API_TOKEN="$(op read 'op://Signa Team Vault/pjtrp5rypgy3jsdys4ox5jtpnu/credential')"
+export CLOUDFLARE_ACCOUNT_ID=<account id>
+export CLOUDFLARE_API_TOKEN=<token that can deploy Workers>
 ./script/deploy_site.sh
 ```
 
 `deploy_site.sh` copies `site/` into `dist/site-deploy` (leaving out this
-README, `art/` and `CNAME`) and runs `wrangler deploy`. `_headers` applies to
+README and `art/`) and runs `wrangler deploy`. The Worker (`worker/index.js`)
+redirects `http://` and `www.` to `https://trymeth.com` and serves
+`/api/visitors`, the recent-visitor count shown under the animation. That
+endpoint reads Cloudflare Web Analytics with its own read-only token, stored
+once as a Worker secret:
+
+```sh
+npx wrangler secret put CF_ANALYTICS_TOKEN   # a token with only Account Analytics Read
+```
+
+Without it the site still works and the count stays hidden. `_headers` applies to
 the deployed files. Keep each file under 25 MiB, which is Cloudflare's asset limit.
 
 ## Cut a release
@@ -45,7 +54,6 @@ the deployed files. Keep each file under 25 MiB, which is Cloudflare's asset lim
 
    Run that in a normal Terminal window, because it asks for an app-specific password.
 3. Smoke-test the DMG: mount it, copy `Meth.app` to a temporary folder, run `spctl -a -vv` on it and open it.
-4. Commit `script/version.env`, `site/download/Meth.dmg` and `site/appcast.xml` together, then push to `main`.
-5. Deploy. GitHub Pages and Cloudflare Pages both deploy on the push. Check that `https://trymeth.com/appcast.xml` shows the new version and that `https://trymeth.com/download/Meth.dmg` downloads it.
+4. Deploy with `./script/deploy_site.sh`, then commit `script/version.env`, `site/download/Meth.dmg` and `site/appcast.xml` together. Check that `https://trymeth.com/appcast.xml` shows the new version and that `https://trymeth.com/download/Meth.dmg` downloads it.
 
 Always publish the DMG and the appcast together. The appcast entry is signed for that exact file, so a mismatched pair makes Sparkle reject the update.

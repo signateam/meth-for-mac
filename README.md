@@ -1,51 +1,98 @@
-# Meth
+<p align="center">
+  <a href="https://trymeth.com"><img src="site/og.png" alt="Meth for your Mac" width="720"></a>
+</p>
 
-Meth is a macOS 15+ menu bar app with three eye states:
+<h1 align="center">Meth for your Mac</h1>
 
-- **Off:** Meth makes no sleep request.
-- **Caffeine:** Meth prevents idle system sleep while allowing the display to dim. This is the launch default.
-- **Meth:** Meth disables lid-close sleep. In this build, the built-in display stays on when the lid is shut. Meth stays on until you explicitly turn it off, including after reopening the lid.
+<p align="center">
+  Keep your Mac awake, even with the lid closed.<br>
+  <a href="https://trymeth.com"><b>trymeth.com</b></a> · <a href="https://trymeth.com/download/Meth.dmg">Download</a> · Free and open source · macOS 15+
+</p>
 
-Left-click the eye for the menu. Right-click to toggle Meth. Settings has a Mode choice for Off, Caffeine, or Meth, followed by Start at login, Caffeinate when Meth launches, and Turn off Meth at 10% battery. The closed-lid setup button is hidden once its power permission and Meth Dealer are ready; it reappears if either needs repair.
+Stop walking around with your laptop ajar. Meth is a small menu bar app that keeps your Mac running with the lid shut, so Claude Code, Codex, builds and downloads keep going while you carry it like a normal person.
+
+## Modes
+
+Meth lives in the menu bar as an eye.
+
+| Mode | Eye | What it does |
+| --- | --- | --- |
+| **Off** | open pupil | Normal sleep. Meth makes no sleep request. |
+| **Caffeine** | filled pupil | Prevents idle sleep while the lid is open. The display can still dim. This is the default at launch. |
+| **Meth** | red pupil | Keeps the Mac awake with the lid closed. The built-in display stays on under the lid. Stays on until you turn it off. |
+
+Left-click the eye for the menu (Off, Caffeine, Meth, Check for Updates…, Settings…, Quit). Right-click the eye to toggle Meth. The pupil turns red only after macOS confirms the setting.
 
 ## Install
 
-1. Move `Meth.app` to `/Applications` and open it. The app has no Dock icon; look for the eye in the menu bar.
-2. Open **Settings** and choose **Meth**, or use **Set Up Closed-Lid Mode** if it appears. Read the screen-on explanation, then approve the macOS administrator prompt. Setup installs one sudo rule file, `/etc/sudoers.d/trymeth-<your short user name>`, that lets only your account run `pmset -a disablesleep 0` and `pmset -a disablesleep 1` without a password. It also registers Meth Dealer, a background process that appears under Meth in **System Settings > General > Login Items & Extensions**. If macOS asks you to allow it there, turn it on and choose **Repair Closed-Lid Mode**. Meth Dealer re-applies Meth after power-source changes and completes an explicit turn-off request if the menu app closes mid-transition. The setup button disappears when closed-lid mode is ready.
-3. Choose a mode in Settings, or right-click the eye to toggle Meth. The pupil turns red only after macOS confirms the setting.
+1. Download [Meth.dmg](https://trymeth.com/download/Meth.dmg) from [trymeth.com](https://trymeth.com) and drag Meth to Applications. It is signed with a Developer ID and notarized by Apple.
+2. Open Meth. There is no Dock icon; look for the eye in the menu bar.
+3. Choose **Meth** from the menu, or from Settings. The first time, Meth explains what it will install and asks for your administrator password once.
 
-This is a local ad-hoc signed build. macOS may require you to use **Open** from Finder the first time. If you move the app after setup, open it from its new location and it points Meth Dealer there. If the app is moved to the Trash or deleted, Meth Dealer restores normal sleep and removes itself. Repair reuses the existing power permission without another administrator prompt when that permission remains active.
+The one-time setup installs `/etc/sudoers.d/trymeth-<your user name>`, which lets only your account run exactly `pmset -a disablesleep 1` and `pmset -a disablesleep 0` without a password. It also registers Meth Dealer, a small background helper that keeps closed-lid mode applied across power changes. It shows under Meth in **System Settings > General > Login Items & Extensions**. If macOS asks you to allow it there, turn it on and choose **Repair Closed-Lid Mode** in Settings.
 
-Meth uses a system-wide power setting for closed-lid mode. Other sleep-control apps can conflict with it. The setting may persist when the menu app is not running, so keep the app available and turn Meth off when you are done. The screen stays on when closed with Meth active; that is required for this build's closed-lid mode. It can consume battery and produce heat, so keep the Mac ventilated and out of a bag.
+Meth updates itself with [Sparkle](https://sparkle-project.org) from `https://trymeth.com/appcast.xml`.
 
-Meth has two safety cutoffs. On battery power at 10% or less, Meth turns itself off and restores normal sleep; you can turn this off in Settings with **Turn off Meth at 10% battery**. If macOS reports a critical thermal state, Meth always turns itself off. Meth Dealer checks both every 15 seconds and on power-source and thermal changes, and the menu shows why, for example “Meth turned off: battery at 10%”. Meth also refuses to turn on while either cutoff applies.
+## Safety
 
-## Build
+- **Heat and battery.** With Meth on, the screen stays on under the lid. Keep the Mac ventilated and out of bags, and turn Meth off when you are done.
+- **Cutoffs.** On battery at 10% or less, Meth turns itself off and restores normal sleep. You can disable this cutoff in Settings. If macOS reports a critical thermal state, Meth always turns itself off.
+- **Removal.** If Meth is trashed or deleted while it is on, Meth Dealer restores normal sleep and removes itself.
+- **System-wide setting.** Closed-lid mode uses a system-wide power setting, so other sleep-control apps can conflict with it. Meth refuses to start if another app has already disabled sleep, so it can always restore your original setting.
 
-Run `./script/build_and_run.sh`. The script builds both executables, creates `dist/Meth.app`, signs it locally, and launches it. `./script/build_and_run.sh --verify` also checks that the menu app stays running. The Codex **Run** action uses this script.
+## Settings
 
-`./script/bundle.sh` assembles the app without launching it. It takes `--configuration debug|release` (default debug), `--arch ARCH` (repeatable; release defaults to a universal arm64 + x86_64 build) and `--sign IDENTITY` (default ad-hoc). A Developer ID identity signs with the hardened runtime and a secure timestamp. The version comes from `script/version.env`.
+Mode (Off, Caffeine, Meth), **Start at login**, **Caffeinate when Meth launches**, **Turn off Meth at 10% battery**, the version with **Check for Updates…**, and **Set Up / Repair / Uninstall Closed-Lid Mode**.
 
-## Updates
+## Uninstall
 
-Meth updates itself with [Sparkle 2](https://sparkle-project.org), a SwiftPM dependency. `bundle.sh` copies `Sparkle.framework` into `Contents/Frameworks` and writes `SUFeedURL` (`https://trymeth.com/appcast.xml`), `SUPublicEDKey` and `SUEnableAutomaticChecks` into `Info.plist`. With a Developer ID identity it signs Sparkle's `Autoupdate`, `Updater.app` and XPC services, then the framework, the dealer and the app, each with `--options runtime --timestamp` and never `--deep`. The menu has **Check for Updates…**.
+Open **Settings** and choose **Uninstall Closed-Lid Mode…**. Meth turns off, restores normal sleep, unregisters Meth Dealer, and asks for your administrator password once to remove your sudo rule. Then delete Meth from Applications.
 
-The EdDSA update key was made with Sparkle's `generate_keys`. Its private half lives in the login keychain (account `ed25519`); back it up with `.build/artifacts/sparkle/Sparkle/bin/generate_keys -x <file>` and keep that file private. Only the public key is in `bundle.sh`.
+To remove it by hand: run `sudo pmset -a disablesleep 0`, turn Meth off under Login Items & Extensions, then `sudo rm /etc/sudoers.d/trymeth-<your user name>`. Check that `pmset -g | grep SleepDisabled` shows `0`.
 
-To publish a release: bump `script/version.env`, then run `./script/release.sh [notes.html]`. It builds the universal bundle signed with the Developer ID identity, checks it with `codesign` and `spctl`, notarizes and staples the app (as a `ditto` zip), builds `dist/Meth.dmg` with [dmgbuild](https://github.com/dmgbuild/dmgbuild) (UDZO, `Meth.app` plus an `/Applications` link in a styled install window; layout in `script/dmg/settings.py`), then signs, notarizes and staples the DMG. It copies the DMG to `site/download/Meth.dmg` and runs `./script/make_appcast.sh`, which writes `site/appcast.xml` with one signed entry for `https://trymeth.com/download/Meth.dmg`. If notarization fails it prints the `notarytool log`. The window background is `script/dmg/background.tiff`, rendered from `script/dmg/background.html` by `./script/dmg/render_background.sh` (headless Chrome, 1x and 2x). It needs dmgbuild (`/usr/bin/python3 -m pip install --user dmgbuild`, or set `METH_PYTHON`) and the `meth-notary` notarytool profile, stored once from an interactive terminal with `xcrun notarytool store-credentials meth-notary --apple-id <apple id> --team-id Z9884J6ZQT`. It exports the Sparkle key to a private temporary file that it deletes on exit, so macOS does not prompt for keychain access. Deploy the site with the DMG and the feed together, since the feed's signature and length describe that exact file.
+## Privacy
 
-## Remove closed-lid setup
+The app collects nothing. Its only network request is Sparkle's update check. The website uses cookieless Cloudflare Web Analytics; see [trymeth.com/privacy](https://trymeth.com/privacy).
 
-Open **Settings** and choose **Uninstall Closed-Lid Mode**. After you confirm, Meth turns Meth off and restores normal sleep, unregisters Meth Dealer, and asks for an administrator password once to remove `/etc/sudoers.d/trymeth-<your short user name>`. It also removes an older `/etc/sudoers.d/meth` file if that file holds your account's Meth rule. It never removes another account's rule. Meth stays usable for Caffeine, and you can set up closed-lid mode again later.
+---
 
-To remove it by hand, turn Meth off, run `sudo pmset -a disablesleep 0`, turn off Meth under Login Items & Extensions, then delete the sudo rule file with `sudo rm /etc/sudoers.d/trymeth-<your short user name>`. Check that `pmset -g | grep SleepDisabled` shows `0` before deleting the app.
+## Development
 
-## Implementation notes
+Requires macOS 15+, Swift 6 (Xcode or the Command Line Tools) and Node for the site generators.
 
-- The menu bar app is a macOS agent app (`LSUIElement`) with an AppKit status item and a small Settings window.
-- Caffeinate uses a process-owned `ProcessInfo` idle-sleep assertion.
-- Closed-lid mode uses `pmset -a disablesleep 1` and `0`. The exact sudo commands are allowlisted per user. The privileged setup script is compiled into the signed app (`PowerAccessScript.swift`) and passed as text to the administrator prompt, so no file in the app bundle runs as root. It checks the rule with `visudo -cf` and installs it atomically as `root:wheel 0440`. This power setting is undocumented and must be checked on each supported macOS release.
-- Meth Dealer is registered with `SMAppService.agent(plistName:)` from `Contents/Library/LaunchAgents/com.toli.trymeth.dealer.plist`, which uses `BundleProgram`.
-- The companion process watches power-source and thermal-state notifications and also reconciles the requested and actual states every 15 seconds. Battery level comes from `IOPSCopyPowerSourcesInfo`; the cutoff logic is in `Sources/MethShared/SafetyCutoff.swift`.
-- Meth 1.0 uses the `com.toli.trymeth` identifier. On launch it copies settings from the old `com.toli.meth.shared` domain if the new one is empty, and replaces an old `~/Library/LaunchAgents/com.toli.meth.dealer.plist` agent with the new Meth Dealer. The older `/etc/sudoers.d/meth` rule keeps working until closed-lid setup is repaired, which replaces it with the per-user file.
-- The GitHub footer icon is from [Primer Octicons](https://github.com/primer/octicons) under its MIT license, included in the app resources.
+```sh
+./script/build_and_run.sh           # debug build to dist/Meth.app, ad-hoc signed, launched
+./script/build_and_run.sh --verify  # also checks the app stays running
+./script/bundle.sh --configuration release   # universal (arm64 + x86_64) bundle, no launch
+```
+
+`script/bundle.sh` takes `--configuration debug|release`, `--arch ARCH` (repeatable) and `--sign IDENTITY` (default ad-hoc). With a Developer ID it signs inside out with the hardened runtime and a secure timestamp, including Sparkle's nested code. The version lives in `script/version.env`.
+
+### Layout
+
+| Path | What |
+| --- | --- |
+| `Sources/Meth` | Menu bar app: status item, menu, Settings, closed-lid setup (`PowerAccessSetup.swift`, `PowerAccessScript.swift`) |
+| `Sources/MethDealer` | Background helper registered with `SMAppService.agent`; reconciles every 15 s and on power and thermal changes |
+| `Sources/MethShared` | Preferences, `pmset` control (`PowerTool.swift`) and battery/thermal cutoffs (`SafetyCutoff.swift`) |
+| `script/` | Build, bundle, release, appcast and site deploy scripts; `script/dmg/` holds the install window |
+| `site/` | trymeth.com (static HTML, `site/art/` has the image and vein generators) |
+| `worker/`, `wrangler.jsonc` | Cloudflare Worker: HTTPS redirect, static assets and `/api/visitors` |
+
+### Release
+
+1. Bump `script/version.env`.
+2. Run `./script/release.sh [notes.html]`. It builds the universal app with the Developer ID identity, notarizes and staples it, builds the styled DMG with [dmgbuild](https://github.com/dmgbuild/dmgbuild), notarizes and staples that, then writes `site/download/Meth.dmg` and a signed `site/appcast.xml`.
+   - It needs dmgbuild (`/usr/bin/python3 -m pip install --user dmgbuild`), the `meth-notary` notarytool profile (`xcrun notarytool store-credentials meth-notary --apple-id <apple id> --team-id Z9884J6ZQT`, run once in an interactive terminal) and the Sparkle EdDSA private key in the login keychain.
+3. Deploy the site, DMG and feed together with `./script/deploy_site.sh` (needs `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`; see `site/README.md`).
+
+### How closed-lid mode works
+
+- Meth runs `pmset -a disablesleep 1` and `0` through the per-user sudo rule, then waits for macOS to confirm the new value before recording that it owns the setting. It never takes over a sleep override another app created.
+- The privileged setup script is compiled into the signed app and passed as text to the administrator prompt, with a clean environment, so no file in the app bundle runs as root. The rule is checked with `visudo -cf` and installed atomically as `root:wheel 0440`.
+- Meth Dealer is registered from `Contents/Library/LaunchAgents/com.toli.trymeth.dealer.plist`. The app checks that it is actually running at launch and before turning Meth on, and re-registers it if macOS left a stale job behind.
+- `disablesleep` is undocumented, so check it on each new macOS release.
+
+## License
+
+[MIT](LICENSE) © Toli Marchuk. Built at [heysigna.com](https://heysigna.com). The GitHub icon in Settings is from [Primer Octicons](https://github.com/primer/octicons) (MIT).
