@@ -24,10 +24,12 @@ public enum PowerTool {
         return nil
     }
 
-    public static func run(_ executable: String, _ arguments: [String]) -> (code: Int32, output: String) {
+    /// Pass `environment` to replace the inherited environment instead of passing it on.
+    public static func run(_ executable: String, _ arguments: [String], environment: [String: String]? = nil) -> (code: Int32, output: String) {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: executable)
         process.arguments = arguments
+        if let environment { process.environment = environment }
         let pipe = Pipe()
         process.standardOutput = pipe
         process.standardError = pipe

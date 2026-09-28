@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meth: keep your Mac awake with the lid closed</title>
+<meta name="description" content="Stop walking around with your laptop ajar. Meth keeps your Mac awake with the lid closed, so Claude keeps coding. Try Meth. Be normal.">
+<meta name="theme-color" content="#0a0c0f">
+<meta property="og:title" content="Stop walking around with your laptop ajar.">
+<meta property="og:description" content="Close the lid. Claude keeps coding. Try Meth. Be normal.">
+<meta property="og:url" content="https://trymeth.com/">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://trymeth.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://trymeth.com/og.png">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<style>
+  :root {
+    --bg: #fafaf9;
+    --fg: #111110;
+    --muted: #6b6b66;
+    --line: #e4e4e0;
+    --card: #ffffff;
+    --red: #e5322d;
+    --red-strong: #d0211c;
+    --red-soft: rgba(229, 50, 45, .07);
+    --btn-bg: #111110;
+    --btn-fg: #fafaf9;
+    --visual-shadow: 0 40px 90px -40px rgba(0,0,0,.35);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e0e0d;
+      --fg: #f2f2ef;
+      --muted: #9a9a94;
+      --line: #262624;
+      --card: #151514;
+      --red-soft: rgba(229, 50, 45, .1);
+      --btn-bg: #f2f2ef;
+      --btn-fg: #0e0e0d;
+      --visual-shadow: 0 40px 90px -40px rgba(0,0,0,.8);
+    }
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font: 16px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    padding: 20px clamp(16px, 4vw, 56px);
+    overflow-x: hidden;
+  }
+  a { color: inherit; text-decoration: none; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--red); outline-offset: 3px; }
+  header, footer { display: flex; justify-content: space-between; align-items: center; font-size: 14px; max-width: 1200px; width: 100%; margin: 0 auto; }
+  .brand { display: flex; align-items: center; gap: 8px; font-weight: 700; letter-spacing: -.01em; }
+  header nav, footer nav { display: flex; gap: 18px; align-items: center; color: var(--muted); }
+  header nav a:hover, footer a:hover { color: var(--fg); }
+  footer { color: var(--muted); }
+
+  main { flex: 1; display: flex; flex-direction: column; justify-content: center; max-width: 1200px; width: 100%; margin: 0 auto; padding: 28px 0; }
+
+  /* ---------- hero ---------- */
+  .hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: clamp(32px, 5vw, 72px); align-items: center; }
+  h1 { font-size: clamp(40px, 4.7vw, 64px); line-height: .98; letter-spacing: -0.045em; font-weight: 750; text-wrap: balance; }
+  .tagline { margin-top: 26px; font-size: clamp(34px, 4.1vw, 56px); line-height: 1; letter-spacing: -0.045em; font-weight: 800; white-space: nowrap; }
+  .tagline .red { color: var(--red); margin-right: .12em; }
+  .lede { margin-top: 20px; font-size: 19px; line-height: 1.45; color: var(--muted); }
+  .cta { margin-top: 28px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .btn { display: inline-flex; align-items: center; gap: 10px; background: var(--btn-bg); color: var(--btn-fg); padding: 14px 26px; border-radius: 999px; font-weight: 600; font-size: 16px; transition: transform .15s; }
+  .btn:hover { transform: translateY(-1px); }
+  .meta { font-size: 14px; color: var(--muted); }
+  .share { margin-top: 14px; font-size: 14px; color: var(--muted); }
+  .share a { color: var(--fg); font-weight: 600; white-space: nowrap; }
+  .share a:hover { color: var(--red); }
+
+  /* ---------- the visual ---------- */
+  .visual { --alu-1: #eceef1; --alu-2: #c4c7cc; position: relative; border-radius: 28px; background: #0a0c0f; border: 1px solid #1d2026; overflow: hidden; isolation: isolate; box-shadow: var(--visual-shadow); }
+
+  .menubar { position: absolute; top: 0; left: 0; right: 0; height: 30px; display: flex; align-items: center; justify-content: flex-end; gap: 14px; padding: 0 18px; font-size: 13px; font-weight: 500; color: #e8eaed; background: rgba(255, 255, 255, .055); border-bottom: 1px solid rgba(255, 255, 255, .07); z-index: 4; }
+  .menubar .app { margin-right: auto; display: flex; gap: 16px; color: rgba(255,255,255,.55); }
+  .menubar .app b { color: #e8eaed; font-weight: 600; }
+  .mb-eye { display: grid; place-items: center; width: 28px; height: 22px; border-radius: 5px; transition: background .15s; }
+  .mb-eye.pressed { background: rgba(255, 255, 255, .2); }
+  .menu { position: absolute; top: 34px; left: 0; min-width: 200px; padding: 5px; border-radius: 10px; background: rgba(40, 42, 46, .96); border: 1px solid rgba(255,255,255,.1); box-shadow: 0 18px 40px rgba(0,0,0,.5); color: #eceef0; font-size: 13px; z-index: 5; opacity: 0; transform: translateY(-4px); pointer-events: none; transition: opacity .14s, transform .14s; }
+  .menu.open { opacity: 1; transform: none; }
+  .menu div { padding: 4px 10px 4px 24px; border-radius: 5px; position: relative; white-space: nowrap; }
+  .menu .dim { color: rgba(255,255,255,.4); }
+  .menu .check::before { content: "✓"; position: absolute; left: 8px; font-size: 12px; }
+  .menu .hover { background: #2f6fed; color: #fff; }
+  .menu hr { border: 0; height: 1px; background: rgba(255,255,255,.1); margin: 5px 8px; }
+
+  .term { position: absolute; left: 0; right: 0; top: 30px; height: 40%; padding: 0 28px 0; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden; font: 500 13px/1.6 ui-monospace, "SF Mono", Menlo, monospace; color: #6f7a86; -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 60%); mask-image: linear-gradient(to bottom, transparent 0, #000 60%); }
+  .term .l { flex: none; white-space: pre; }
+  .term .cmd { color: #e6e8eb; }
+  .term .ok { color: #4cc38a; }
+  .term .status { flex: none; color: #d97757; white-space: pre; }
+  .term .status::after { content: ""; display: inline-block; width: 8px; height: 15px; margin-left: 6px; vertical-align: -3px; background: #e6e8eb; animation: caret 1s steps(1) infinite; }
+  @keyframes caret { 50% { opacity: 0; } }
+
+  .cursor { position: absolute; left: 0; top: 0; width: 60px; height: 81px; z-index: 6; pointer-events: none; opacity: 0; transform-origin: 5px 5px; filter: drop-shadow(0 10px 18px rgba(0,0,0,.55)); }
+  .ripple { position: absolute; width: 64px; height: 64px; margin: -32px 0 0 -32px; border-radius: 50%; border: 2px solid rgba(255,255,255,.85); z-index: 6; pointer-events: none; opacity: 0; }
+
+  .stage { position: relative; z-index: 1; width: 100%; aspect-ratio: 560 / 470; }
+  .scene { position: absolute; left: 0; top: 0; width: 560px; height: 470px; transform-origin: 0 0; perspective: 1500px; perspective-origin: 50% 20%; }
+  .rig { position: absolute; inset: 0; transform-style: preserve-3d; }
+  .laptop { position: absolute; left: 45%; top: 66%; width: 400px; height: 266px; margin: -133px 0 0 -200px; transform-style: preserve-3d; transform: rotateX(58deg) rotateZ(-28deg); }
+  .laptop * { outline: 1px solid transparent; }
+  .shadow { position: absolute; inset: 0 -40px -70px; background: radial-gradient(closest-side, rgba(0,0,0,.8), rgba(0,0,0,0)); transform: translateZ(-30px); }
+  .ply { position: absolute; inset: 0; border-radius: 18px; background: linear-gradient(160deg, #b9bdc3, #8f949b); }
+  .base { position: absolute; inset: 0; border-radius: 18px; background: linear-gradient(160deg, var(--alu-1), var(--alu-2)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.35); }
+  .kb { position: absolute; left: 30px; right: 30px; top: 26px; height: 124px; display: grid; grid-template-columns: repeat(13, 1fr); grid-auto-rows: 1fr; gap: 4px; padding: 6px; border-radius: 8px; background: rgba(0,0,0,.16); }
+  .kb i { background: #3a3c41; border-radius: 3px; }
+  .tp { position: absolute; left: 50%; top: 166px; width: 150px; height: 82px; margin-left: -75px; border-radius: 10px; background: rgba(0,0,0,.06); box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
+  .glow { position: absolute; inset: -80px -50px 0; background: radial-gradient(closest-side, rgba(150, 190, 255, .9), rgba(150, 190, 255, 0)); transform: translateZ(1px); opacity: 0; }
+  .lid { position: absolute; left: 0; right: 0; bottom: 100%; height: 266px; transform-origin: 50% 100%; transform-style: preserve-3d; transform: translateZ(2px) rotateX(-153deg); }
+  .screen, .lid-back { position: absolute; inset: 0; border-radius: 18px; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+  .screen { background: #0c0c0d; padding: 12px; }
+  .display { height: 100%; border-radius: 6px; background: linear-gradient(#3a5fa0, #0d1422); }
+  .lid-back { transform: translateZ(-7.2px) rotateY(180deg); background: linear-gradient(200deg, var(--alu-1), var(--alu-2)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.3); display: grid; place-items: center; }
+  .lid-back svg { width: 64px; opacity: .28; }
+
+  .steps { position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 4; display: grid; grid-template-columns: 1fr 1fr; padding: 4px; border-radius: 999px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.09); }
+  .steps::before { content: ""; position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px); border-radius: 999px; background: #f2f2ef; transition: transform .45s cubic-bezier(.3,.7,.2,1), background .3s; }
+  .steps[data-phase="1"]::before { transform: translateX(100%); background: var(--red-strong); }
+  .steps button { position: relative; z-index: 1; font: inherit; font-size: 14px; font-weight: 600; white-space: nowrap; color: rgba(255,255,255,.62); background: transparent; border: 0; border-radius: 999px; padding: 10px 20px; cursor: pointer; transition: color .3s; }
+  .steps button:hover { color: #fff; }
+  .steps[data-phase="0"] button[data-i="0"] { color: #0a0c0f; }
+  .steps[data-phase="1"] button[data-i="1"] { color: #fff; }
+
+  /* ---------- modes ---------- */
+  .modes { margin-top: 40px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; list-style: none; padding: 0; }
+  .mode { display: flex; align-items: center; gap: 16px; padding: 18px 22px; border: 1px solid var(--line); border-radius: 20px; background: var(--card); }
+  .mode svg { flex: none; width: 32px; height: auto; }
+  .mode h2 { font-size: 17px; font-weight: 700; letter-spacing: -.02em; line-height: 1.2; }
+  .mode p { font-size: 14.5px; color: var(--muted); line-height: 1.4; margin-top: 2px; }
+  .mode.meth { border-color: transparent; background: linear-gradient(var(--red-soft), var(--red-soft)), var(--card); box-shadow: 0 0 0 1px color-mix(in srgb, var(--red) 55%, transparent), 0 12px 40px -14px rgba(229,50,45,.45); }
+  .fine { margin-top: 14px; font-size: 13px; color: var(--muted); }
+
+  @media (min-width: 901px) and (max-height: 820px) {
+    main { padding: 12px 0; }
+    h1 { font-size: clamp(36px, 7vh, 60px); }
+    .tagline { margin-top: 16px; font-size: clamp(32px, 6vh, 52px); }
+    .lede { margin-top: 12px; }
+    .cta { margin-top: 20px; }
+    .modes { margin-top: 24px; }
+    .stage { aspect-ratio: 560 / 420; }
+  }
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; }
+    .modes { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    .tagline { white-space: normal; line-height: 1.02; }
+    .stage { margin: 24px 0 64px; }
+    .term { font-size: 11px; padding: 0 16px; }
+    .menubar .app span { display: none; }
+    .cursor { width: 44px; height: 60px; transform-origin: 4px 4px; }
+    .steps button { padding: 9px 14px; font-size: 13px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .term .status::after { animation: none; }
+    .menu, .btn, .steps::before, .steps button, .mb-eye { transition: none; }
+  }
+</style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="/" aria-label="Meth home">
+      <svg width="22" height="20" viewBox="0 0 21 19" aria-hidden="true"><path d="M1.5 9.5C6 1 15 1 19.5 9.5C15 18 6 18 1.5 9.5Z" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linejoin="round"/><ellipse cx="10.5" cy="9.5" rx="2.4" ry="4.3" fill="var(--red)"/></svg>
+      Meth
+    </a>
+    <nav>
+      <a href="https://github.com/tolimarchuk">GitHub</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div>
+        <h1>Stop walking around with your laptop ajar.</h1>
+        <p class="tagline"><span class="red">Try Meth.</span> Be normal.</p>
+        <p class="lede">Close the lid. Claude keeps coding.</p>
+        <div class="cta">
+          <a class="btn" href="/download/Meth.dmg">
+            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m0 0L4.5 6.5M8 10l3.5-3.5M3 13h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Get Meth
+          </a>
+          <span class="meta">First one's free · macOS 15+</span>
+        </div>
+        <p class="share">Know someone who carries theirs ajar? <a href="https://x.com/intent/post?text=I%27ve%20been%20carrying%20my%20laptop%20half%20open%20like%20a%20pizza%20box%20so%20Claude%20doesn%27t%20stop.%20Turns%20out%20there%27s%20a%20fix%3A&amp;url=https%3A%2F%2Ftrymeth.com">Send them this →</a></p>
+      </div>
+
+      <div class="visual" id="visual">
+        <div class="term" id="term" aria-hidden="true"><div class="status" id="status"></div></div>
+
+        <div class="menubar" aria-hidden="true">
+          <div class="app"><b>Terminal</b><span>Shell</span><span>Edit</span><span>View</span></div>
+          <div class="mb-eye" id="mbEye">
+            <svg width="21" height="19" viewBox="0 0 21 19"><path d="M1.5 9.5C6 1 15 1 19.5 9.5C15 18 6 18 1.5 9.5Z" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linejoin="round"/><ellipse id="mbPupil" cx="10.5" cy="9.5" rx="2.4" ry="4.3" fill="currentColor"/></svg>
+          </div>
+          <span>9:41</span>
+        </div>
+        <div class="menu" id="menu" aria-hidden="true">
+          <div class="dim" id="menuStatus">Caffeine is on</div>
+          <hr>
+          <div>Off</div>
+          <div class="check" id="menuCaff">Caffeine</div>
+          <div id="menuMeth">Turn On Meth</div>
+          <hr>
+          <div>Settings…</div>
+          <div id="menuQuit">Quit Meth</div>
+        </div>
+
+        <div class="stage" id="stage" role="img" aria-label="Without Meth, a laptop is carried awkwardly with its lid propped open. A cursor turns on Meth from the menu bar, the lid closes, and the agent in the terminal keeps working.">
+          <div class="scene" id="scene">
+            <div class="rig" id="rig">
+              <div class="laptop" id="laptop">
+                <div class="shadow"></div>
+                <div id="plies"></div>
+                <div class="base">
+                  <div class="kb" id="kb"></div>
+                  <div class="tp"></div>
+                </div>
+                <div class="glow" id="glow"></div>
+                <div class="lid" id="lid">
+                  <div class="screen"><div class="display"></div></div>
+                  <div id="lidPlies"></div>
+                  <div class="lid-back"><svg viewBox="0 0 21 19"><path d="M1.5 9.5C6 1 15 1 19.5 9.5C15 18 6 18 1.5 9.5Z" fill="none" stroke="#000" stroke-width="1.2"/><ellipse cx="10.5" cy="9.5" rx="2.4" ry="4.3" fill="#000"/></svg></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <svg class="cursor" id="cursor" viewBox="0 0 17 23" aria-hidden="true"><path d="M1.5 1.5v17.2l4.3-4.2 3 6.8 3-1.3-2.9-6.7h6.1z" fill="#000" stroke="#fff" stroke-width="1.3" stroke-linejoin="round"/></svg>
+        <div class="ripple" id="ripple"></div>
+
+        <div class="steps" id="steps" role="group" aria-label="Laptop state" data-phase="0">
+          <button type="button" data-i="0">Without Meth</button>
+          <button type="button" data-i="1">With Meth</button>
+        </div>
+      </div>
+    </section>
+
+    <ul class="modes">
+      <li class="mode">
+        <svg viewBox="0 0 21 19" aria-hidden="true"><path d="M1.5 9.5C6 1 15 1 19.5 9.5C15 18 6 18 1.5 9.5Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><ellipse cx="10.5" cy="9.5" rx="2.4" ry="4.3" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>
+        <div><h2>Off</h2><p>Sober. Close the lid and it sleeps.</p></div>
+      </li>
+      <li class="mode">
+        <svg viewBox="0 0 21 19" aria-hidden="true"><path d="M1.5 9.5C6 1 15 1 19.5 9.5C15 18 6 18 1.5 9.5Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><ellipse cx="10.5" cy="9.5" rx="2.4" ry="4.3" fill="currentColor"/></svg>
+        <div><h2>Caffeine</h2><p>The gateway. Awake while the lid's open.</p></div>
+      </li>
+      <li class="mode meth">
+        <svg viewBox="0 0 21 19" aria-hidden="true"><path d="M1.5 9.5C6 1 15 1 19.5 9.5C15 18 6 18 1.5 9.5Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><ellipse cx="10.5" cy="9.5" rx="2.4" ry="4.3" fill="var(--red)"/></svg>
+        <div><h2>Meth</h2><p>Lid shut. Still shipping.</p></div>
+      </li>
+    </ul>
+    <p class="fine">Side effects may include a warm laptop: the screen stays on under the lid, so keep it out of bags. Right-click the eye to toggle Meth after a one-time admin setup. Cuts itself off at 10% battery.</p>
+  </main>
+
+  <footer>
+    <span>© 2026 Meth</span>
+    <nav>
+      <a href="/privacy.html">Privacy</a>
+      <a href="https://x.com/tolibear_">@tolibear_</a>
+      <a href="https://github.com/tolimarchuk">GitHub</a>
+    </nav>
+  </footer>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+  // Keyboard: five rows of keys plus a spacebar row.
+  const keys = [];
+  for (let i = 0; i < 65; i++) keys.push('<i></i>');
+  [1, 1, 2, 5, 2, 1, 1].forEach((span) => keys.push(`<i style="grid-column: span ${span}"></i>`));
+  $('kb').innerHTML = keys.join('');
+
+  // Solid thickness: dense stacked layers read as one smooth rounded edge.
+  const plies = (n, step, offset) => Array.from({ length: n }, (_, i) => `<div class="ply" style="transform: translateZ(${-(i + offset) * step}px)"></div>`).join('');
+  $('plies').innerHTML = plies(24, 0.5, 1);
+  $('lidPlies').innerHTML = plies(14, 0.5, 0.5);
+
+  // Scale the fixed-size 3D scene to its container.
+  const stage = $('stage'), scene = $('scene');
+  const fit = () => { scene.style.transform = `scale(${stage.clientWidth / 560})`; };
+  fit();
+
+  // The agent never stops, whatever the lid is doing.
+  const script = [
+    ['cmd', '› fix flaky checkout test'],
+    ['', '  read   src/cart/checkout.ts'],
+    ['', '  edit   src/cart/checkout.ts      +12 −4'],
+    ['', '  run    npm test'],
+    ['ok', '  ✓ 142 passed'],
+    ['cmd', '› migrate users table'],
+    ['', '  write  migrations/0042-users.sql'],
+    ['', '  run    db:migrate'],
+    ['ok', '  ✓ migrated 18,204 rows'],
+    ['cmd', '› add rate limiting to /api/login'],
+    ['', '  read   src/api/login.ts'],
+    ['', '  edit   src/api/login.ts          +31 −2'],
+    ['ok', '  ✓ 23 passed'],
+    ['cmd', '› open pull request'],
+    ['ok', '  ✓ PR #218 ready for review'],
+  ];
+  const term = $('term'), status = $('status');
+  let line = 0, seconds = 41 * 60 + 7, phase = 0;
+  const tick = () => {
+    const [c, t] = script[line++ % script.length];
+    const el = document.createElement('div');
+    el.className = `l ${c}`;
+    el.textContent = c === 'ok' && phase === 1 ? `${t}  (lid closed)` : t;
+    term.insertBefore(el, status);
+    while (term.children.length > 24) term.firstChild.remove();
+  };
+  const renderStatus = () => {
+    status.textContent = `✻ Working… (${Math.floor(seconds / 60)}m ${String(seconds % 60).padStart(2, '0')}s)`;
+  };
+  for (let i = 0; i < 16; i++) tick();
+  renderStatus();
+
+  // State: 0 = without Meth (carried ajar), 1 = with Meth (lid closed).
+  const lid = $('lid'), laptop = $('laptop'), glow = $('glow'), rig = $('rig');
+  const mbEye = $('mbEye'), mbPupil = $('mbPupil'), menu = $('menu'), steps = $('steps');
+  const menuMeth = $('menuMeth'), menuCaff = $('menuCaff'), menuStatus = $('menuStatus'), menuQuit = $('menuQuit');
+  const cursor = $('cursor'), ripple = $('ripple'), visual = $('visual');
+  const buttons = [...steps.querySelectorAll('button')];
+
+  function setPhase(i) {
+    phase = i;
+    const meth = i === 1;
+    mbPupil.setAttribute('fill', meth ? 'var(--red)' : 'currentColor');
+    menuStatus.textContent = meth ? 'Meth is on' : 'Caffeine is on';
+    menuMeth.textContent = meth ? 'Turn Off Meth' : 'Turn On Meth';
+    menuCaff.classList.toggle('check', !meth);
+    menuMeth.classList.toggle('check', meth);
+    menuQuit.textContent = meth ? 'Turn Off Meth and Quit' : 'Quit Meth';
+    steps.dataset.phase = i;
+    buttons.forEach((b, j) => b.setAttribute('aria-pressed', String(j === i)));
+    if (reduce) {
+      lid.style.transform = `translateZ(2px) rotateX(${meth ? -180 : -153}deg)`;
+      glow.style.opacity = meth ? 0 : 0.9;
+    }
+  }
+
+  // Cursor choreography: fly in, open the eye menu, choose Turn On Meth, fly out.
+  const pos = (el, dx = 0.5, dy = 0.5) => {
+    const v = visual.getBoundingClientRect(), r = el.getBoundingClientRect();
+    return [r.left - v.left + r.width * dx, r.top - v.top + r.height * dy];
+  };
+  const tip = () => cursor.clientWidth / 17 * 1.5;
+  const at = ([x, y], s = 1, r = 0) => `translate(${x - tip()}px, ${y - tip()}px) rotate(${r}deg) scale(${s})`;
+  const move = (from, to, duration, arc = 0) => cursor.animate([
+    { transform: at(from) },
+    { transform: at([(from[0] + to[0]) / 2 + arc, (from[1] + to[1]) / 2 - Math.abs(arc)], 1, -8), offset: 0.55 },
+    { transform: at(to) },
+  ], { duration, easing: 'cubic-bezier(.3,.7,.2,1)', fill: 'forwards' }).finished.catch(() => {});
+  const click = async (p) => {
+    cursor.animate([{ transform: at(p) }, { transform: at(p, 0.82) }, { transform: at(p) }], { duration: 220, fill: 'forwards' });
+    ripple.style.left = `${p[0]}px`; ripple.style.top = `${p[1]}px`;
+    ripple.animate([{ opacity: 0.9, transform: 'scale(.3)' }, { opacity: 0, transform: 'scale(1.4)' }], { duration: 480, easing: 'ease-out' });
+    await sleep(220);
+  };
+  const placeMenu = () => {
+    const [x] = pos(mbEye, 0, 1);
+    menu.style.left = `${Math.max(8, Math.min(x - 6, visual.clientWidth - menu.offsetWidth - 8))}px`;
+  };
+
+  let run = 0, auto = !reduce, visible = true;
+  async function loop() {
+    const id = ++run;
+    const alive = () => id === run;
+    while (alive()) {
+      setPhase(0);
+      await sleep(2000); if (!alive()) return;
+      const w = visual.clientWidth, h = visual.clientHeight;
+      const eye = pos(mbEye);
+      cursor.style.opacity = 1;
+      await move([w * 0.1, h + 120], eye, 900, -140); if (!alive()) return;
+      mbEye.classList.add('pressed');
+      await click(eye); if (!alive()) return;
+      placeMenu();
+      menu.classList.add('open');
+      await sleep(250); if (!alive()) return;
+      const item = pos(menuMeth, 0.85, 0.6);
+      await move(eye, item, 500); if (!alive()) return;
+      menuMeth.classList.add('hover');
+      await sleep(700); if (!alive()) return;
+      await click(item); if (!alive()) return;
+      menu.classList.remove('open');
+      mbEye.classList.remove('pressed');
+      menuMeth.classList.remove('hover');
+      setPhase(1);
+      mbEye.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.35)' }, { transform: 'scale(1)' }], { duration: 400 });
+      await sleep(350); if (!alive()) return;
+      await move(item, [w + 80, h * 0.75], 800, 40); if (!alive()) return;
+      cursor.style.opacity = 0;
+      await sleep(3400);
+    }
+  }
+  function stopLoop() {
+    run++;
+    cursor.getAnimations().forEach((a) => a.cancel());
+    cursor.style.opacity = 0;
+    menu.classList.remove('open');
+    mbEye.classList.remove('pressed');
+    menuMeth.classList.remove('hover');
+  }
+  buttons.forEach((b) => b.addEventListener('click', () => {
+    auto = false;
+    stopLoop();
+    setPhase(Number(b.dataset.i));
+  }));
+
+  // Motion: awkward swinging without Meth, an easy walk with it.
+  let awk = 0, calm = 0, lidA = -153, glowV = 0, last = 0, t = 0, acc = 0, secAcc = 0, next = 0.3, raf = 0;
+  const ease = (v, target, rate, dt) => v + (target - v) * Math.min(1, dt * rate);
+  function frame(now) {
+    raf = 0;
+    const dt = Math.min(0.05, (now - last) / 1000 || 0);
+    last = now; t += dt;
+    const ajar = phase === 0;
+    awk = ease(awk, ajar ? 1 : 0, 3, dt);
+    calm = ease(calm, ajar ? 0 : 1, 3, dt);
+
+    const stumble = Math.pow(Math.max(0, Math.sin(t * 2.7)), 10);
+    const swing = awk * (Math.sin(t * 2.6) * 11 + Math.sin(t * 6.1) * 3 + stumble * 9) + calm * Math.sin(t * 1.9) * 2;
+    const pitch = awk * (Math.sin(t * 3.3 + 1) * 7 - stumble * 6);
+    const roll = awk * Math.sin(t * 2.1) * 8;
+    const x = awk * (Math.sin(t * 1.3) * 26 + Math.sin(t * 3.7) * 7 + stumble * 18) + calm * Math.sin(t * 1.9) * 6;
+    const y = awk * (-Math.abs(Math.sin(t * 4.4)) * 18 + Math.sin(t * 9.7) * 3) - calm * Math.abs(Math.sin(t * 3.8)) * 6;
+    const r = awk * Math.sin(t * 2.6 + 0.5) * 5;
+    const flap = awk * (Math.sin(t * 5.2) * 7 + Math.sin(t * 11.3) * 3 - stumble * 10);
+
+    lidA = ease(lidA, ajar ? -153 : -180, ajar ? 5 : 9, dt);
+    glowV = ease(glowV, ajar ? 0.9 : 0, 4, dt);
+
+    rig.style.transform = `translate(${x}px, ${y}px) rotate(${r}deg)`;
+    laptop.style.transform = `rotateX(${58 + pitch}deg) rotateY(${roll}deg) rotateZ(${-28 + swing}deg)`;
+    lid.style.transform = `translateZ(2px) rotateX(${Math.min(-146, lidA + flap)}deg)`;
+    glow.style.opacity = (glowV * (1 + flap / 40)).toFixed(3);
+
+    acc += dt; secAcc += dt;
+    if (acc > next) { acc = 0; next = 0.25 + ((line * 37) % 10) / 18; tick(); }
+    if (secAcc >= 1) { secAcc -= 1; seconds++; renderStatus(); }
+    startRaf();
+  }
+  function startRaf() {
+    if (!raf && visible && !document.hidden && !reduce) raf = requestAnimationFrame(frame);
+  }
+  function resumeAll() { last = performance.now(); startRaf(); if (auto) loop(); }
+
+  new ResizeObserver(() => { fit(); if (auto && visible) { stopLoop(); loop(); } }).observe(visual);
+  new IntersectionObserver(([e]) => {
+    visible = e.isIntersecting;
+    if (visible) resumeAll(); else stopLoop();
+  }).observe(visual);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) stopLoop(); else resumeAll(); });
+
+  setPhase(reduce ? 1 : 0);
+})();
+</script>
+</body>
+</html>

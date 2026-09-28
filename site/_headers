@@ -1,0 +1,8 @@
+/download/*.dmg
+  Content-Type: application/x-apple-diskimage
+  Content-Disposition: attachment
+  Cache-Control: no-cache
+
+/appcast.xml
+  Content-Type: application/xml; charset=utf-8
+  Cache-Control: no-cache

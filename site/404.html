@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meth: page not found</title>
+<meta name="description" content="This page doesn't exist.">
+<meta name="theme-color" content="#0a0c0f">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+  :root {
+    --bg: #fafaf9;
+    --fg: #111110;
+    --muted: #6b6b66;
+    --line: #e4e4e0;
+    --card: #ffffff;
+    --red: #e5322d;
+    --btn-bg: #111110;
+    --btn-fg: #fafaf9;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e0e0d;
+      --fg: #f2f2ef;
+      --muted: #9a9a94;
+      --line: #262624;
+      --card: #151514;
+      --btn-bg: #f2f2ef;
+      --btn-fg: #0e0e0d;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font: 16px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    padding: 20px clamp(16px, 4vw, 56px);
+    overflow-x: hidden;
+  }
+  a { color: inherit; text-decoration: none; }
+  a:focus-visible { outline: 2px solid var(--red); outline-offset: 3px; }
+  header, footer { display: flex; justify-content: space-between; align-items: center; font-size: 14px; max-width: 1200px; width: 100%; margin: 0 auto; }
+  .brand { display: flex; align-items: center; gap: 8px; font-weight: 700; letter-spacing: -.01em; }
+  header nav, footer nav { display: flex; gap: 18px; align-items: center; color: var(--muted); }
+  header nav a:hover, footer a:hover { color: var(--fg); }
+  footer { color: var(--muted); }
+
+  main { flex: 1; display: flex; flex-direction: column; justify-content: center; max-width: 640px; width: 100%; margin: 0 auto; padding: 56px 0; }
+  h1 { font-size: clamp(36px, 4.7vw, 56px); line-height: .98; letter-spacing: -0.045em; font-weight: 750; text-wrap: balance; }
+  .red { color: var(--red); }
+  .lede { margin-top: 20px; font-size: 19px; line-height: 1.45; color: var(--muted); }
+  h2 { margin-top: 36px; font-size: 17px; font-weight: 700; letter-spacing: -.02em; }
+  main p:not(.lede) { margin-top: 8px; color: var(--muted); }
+  main p a { color: var(--fg); font-weight: 600; }
+  main p a:hover { color: var(--red); }
+  code { font: 14px ui-monospace, "SF Mono", Menlo, monospace; color: var(--fg); }
+  .cta { margin-top: 28px; }
+  .btn { display: inline-flex; align-items: center; gap: 10px; background: var(--btn-bg); color: var(--btn-fg); padding: 14px 26px; border-radius: 999px; font-weight: 600; font-size: 16px; transition: transform .15s; }
+  .btn:hover { transform: translateY(-1px); }
+  @media (prefers-reduced-motion: reduce) { .btn { transition: none; } }
+</style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="/" aria-label="Meth home">
+      <svg width="22" height="20" viewBox="0 0 21 19" aria-hidden="true"><path d="M1.5 9.5C6 1 15 1 19.5 9.5C15 18 6 18 1.5 9.5Z" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linejoin="round"/><ellipse cx="10.5" cy="9.5" rx="2.4" ry="4.3" fill="var(--red)"/></svg>
+      Meth
+    </a>
+    <nav>
+      <a href="https://github.com/tolimarchuk">GitHub</a>
+    </nav>
+  </header>
+
+  <main>
+    <h1>404. <span class="red">This page</span> is asleep.</h1>
+    <p class="lede">Nothing here. Maybe it closed its lid.</p>
+    <div class="cta"><a class="btn" href="/">Back to Meth</a></div>
+  </main>
+
+  <footer>
+    <span>© 2026 Meth</span>
+    <nav>
+      <a href="/privacy.html">Privacy</a>
+      <a href="https://x.com/tolibear_">@tolibear_</a>
+      <a href="https://github.com/tolimarchuk">GitHub</a>
+    </nav>
+  </footer>
+</body>
+</html>

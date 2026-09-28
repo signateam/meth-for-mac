@@ -1,0 +1,28 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+*{margin:0;box-sizing:border-box}
+body{width:1200px;height:630px;background:#0a0c0f;color:#f2f2ef;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif;-webkit-font-smoothing:antialiased;padding:80px 88px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+.bg{position:absolute;inset:0;font:13px/1.8 ui-monospace,Menlo,monospace;color:#39414b;padding:40px 0 0 780px;white-space:pre;-webkit-mask-image:linear-gradient(90deg,transparent 62%,#000 85%)}
+.bg .ok{color:#2c7a50}
+h1{position:relative;font-size:84px;line-height:1;letter-spacing:-.045em;font-weight:750;max-width:900px}
+p{position:relative;font-size:48px;font-weight:700;letter-spacing:-.035em;margin-top:26px}
+p span{color:#e5322d}
+.foot{position:relative;display:flex;align-items:center;gap:14px;font-size:24px;font-weight:600;color:#9aa1a9}
+</style></head><body>
+<div class="bg">› fix flaky checkout test
+  edit   src/cart/checkout.ts   +12 −4
+  run    npm test
+<span class="ok">  ✓ 142 passed</span>
+› migrate users table
+  write  migrations/0042-users.sql
+<span class="ok">  ✓ migrated 18,204 rows</span>
+› add rate limiting to /api/login
+  edit   src/api/login.ts       +31 −2
+<span class="ok">  ✓ 23 passed</span>
+› open pull request
+<span class="ok">  ✓ PR #218 ready for review</span>
+› update docs for the new endpoint
+  edit   docs/api.md            +48
+<span class="ok">  ✓ done while the lid was closed</span></div>
+<div><h1>Stop walking around with your laptop ajar.</h1><p><span>Try Meth.</span> Be normal.</p></div>
+<div class="foot"><svg width="42" height="38" viewBox="0 0 21 19"><path d="M1.5 9.5C6 1 15 1 19.5 9.5C15 18 6 18 1.5 9.5Z" fill="none" stroke="#f2f2ef" stroke-width="1.5" stroke-linejoin="round"/><ellipse cx="10.5" cy="9.5" rx="2.4" ry="4.3" fill="#e5322d"/></svg>trymeth.com</div>
+</body></html>

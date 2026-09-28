@@ -1,0 +1,14 @@
+{
+  // trymeth.com: static site served from Cloudflare (Workers static assets).
+  // Deploy with ./script/deploy_site.sh, which stages site/ into dist/site-deploy first.
+  "name": "trymeth",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    "directory": "./dist/site-deploy",
+    "not_found_handling": "404-page"
+  },
+  "routes": [
+    { "pattern": "trymeth.com", "custom_domain": true },
+    { "pattern": "www.trymeth.com", "custom_domain": true }
+  ]
+}

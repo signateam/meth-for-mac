@@ -1,24 +1,52 @@
 import AppKit
 import Foundation
 import MethShared
+import ServiceManagement
 
 enum PowerAccessSetup {
-    static let agentLabel = "com.toli.meth.dealer"
-    private static let legacyAgentLabel = "com.toli.meth.keeper"
+    static let agentLabel = "com.toli.trymeth.dealer"
+    private static let legacyAgentLabels = ["com.toli.meth.dealer", "com.toli.meth.keeper"]
+    private static let registeredPathKey = "dealerRegisteredAppPath"
+    private static let registeredVersionKey = "dealerRegisteredAppVersion"
+    private static let safePath = "/usr/bin:/bin:/usr/sbin:/sbin"
 
-    static func migrateLegacyAgentIfNeeded() -> String? {
-        guard FileManager.default.fileExists(atPath: agentURL(legacyAgentLabel).path) else { return nil }
-        return installAgent()
+    /// Bundled at Contents/Library/LaunchAgents with a BundleProgram path, so launchd
+    /// runs the helper from whichever copy of Meth.app registered it.
+    private static var dealer: SMAppService { SMAppService.agent(plistName: "\(agentLabel).plist") }
+
+    /// Replaces an old hand-written agent, re-points the dealer after Meth.app moves,
+    /// and restarts it after an update so the new dealer code runs.
+    static func refreshDealerAtLaunch() -> String? {
+        // A copy opened from a disk image or App Translocation must not take the
+        // dealer away from the installed app; its path disappears on eject.
+        guard !isTransientCopy() else { return nil }
+        if legacyAgentLabels.contains(where: { FileManager.default.fileExists(atPath: agentURL($0).path) }) {
+            // A legacy agent reads the old preferences domain, so it is always retired,
+            // even if the replacement cannot start.
+            let registerError = registerDealer()
+            return retireLegacyAgents(in: "gui/\(getuid())") ?? registerError
+        }
+        guard dealer.status == .enabled else { return nil }
+        if dealerMatchesThisApp() {
+            restartDealerAfterUpdate()
+            return nil
+        }
+        // Another copy (for example a development build) leaves an installed Meth.app alone.
+        if let registered = UserDefaults.standard.string(forKey: registeredPathKey), isThisApp(atPath: registered) {
+            return nil
+        }
+        return registerDealer()
     }
 
     static func isReady() -> Bool {
-        guard let helper = Bundle.main.path(forAuxiliaryExecutable: "MethDealer"),
-              let data = try? Data(contentsOf: agentURL(agentLabel)),
-              let plist = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any],
-              plist["Label"] as? String == agentLabel,
-              plist["ProgramArguments"] as? [String] == [helper] else { return false }
+        guard dealer.status == .enabled, dealerMatchesThisApp(), hasOwnRule() else { return false }
         let job = PowerTool.run("/bin/launchctl", ["print", "gui/\(getuid())/\(agentLabel)"])
-        return job.code == 0 && job.output.contains("program = \(helper)\n") && hasPowerAccess()
+        return job.code == 0 && hasPowerAccess()
+    }
+
+    /// True when anything closed-lid mode installed is still present.
+    static func isInstalled() -> Bool {
+        dealer.status != .notRegistered || hasOwnRule() || hasPowerAccess()
     }
 
     static func hasPowerAccess() -> Bool {
@@ -31,48 +59,107 @@ enum PowerAccessSetup {
     }
 
     static func install() -> String? {
-        if hasPowerAccess() { return installAgent() }
-        guard let script = Bundle.main.path(forResource: "install-power-access", ofType: "sh") else {
-            return "The setup script is missing from Meth.app."
+        if Bundle.main.bundlePath.contains("/AppTranslocation/") {
+            return "Move Meth to your Applications folder and open it from there before setting up closed-lid mode."
         }
+        if !(hasPowerAccess() && hasOwnRule()) {
+            let user = NSUserName()
+            let prompt = "Meth wants to let “\(user)” run only “pmset -a disablesleep 0” and “pmset -a disablesleep 1” without a password, so closed-lid mode can turn lid-close sleep off and back on. It installs one sudo rule file in /etc/sudoers.d."
+            if let error = runPrivileged("install", user: user, prompt: prompt) { return error }
+        }
+        return registerDealer()
+    }
+
+    /// Unregisters the dealer and removes this user's sudo rule with one admin prompt.
+    /// The caller turns Meth off first, while the sudo rule still works.
+    static func uninstall() -> String? {
+        try? dealer.unregister()
+        UserDefaults.standard.removeObject(forKey: registeredPathKey)
+        UserDefaults.standard.removeObject(forKey: registeredVersionKey)
+        if let error = retireLegacyAgents(in: "gui/\(getuid())") { return error }
+        guard hasPowerAccess() || hasOwnRule() else { return nil }
         let user = NSUserName()
-        let shellCommand = "/bin/bash \(shellQuote(script)) \(shellQuote(user))"
-        let appleScript = "do shell script \(appleScriptQuote(shellCommand)) with administrator privileges"
-        let result = PowerTool.run("/usr/bin/osascript", ["-e", appleScript])
+        let prompt = "Meth wants to remove the sudo rule that lets “\(user)” run “pmset -a disablesleep” without a password. Caffeine will keep working."
+        return runPrivileged("uninstall", user: user, prompt: prompt)
+    }
+
+    private static func runPrivileged(_ mode: String, user: String, prompt: String) -> String? {
+        guard PowerAccessScript.isValidUserName(user), let target = PowerAccessScript.sudoersPath(for: user) else {
+            return "Meth cannot set up closed-lid mode for the account name “\(user)”."
+        }
+        // The script text itself is the argument, so no file is executed as root.
+        let arguments = [PowerAccessScript.text, mode, user, target,
+                         PowerAccessScript.sudoersText(for: user), PowerAccessScript.legacySudoersText(for: user)]
+        let command = (1...arguments.count).map { "quoted form of (item \($0) of argv)" }
+        // env -i and --noprofile --norc keep BASH_ENV, exported functions and other
+        // inherited variables from running as root alongside the script.
+        let shellCommand = (["\"/usr/bin/env -i PATH=\(safePath) /bin/bash --noprofile --norc -c \" & \(command[0]) & \" trymeth-setup\""] + command.dropFirst()).joined(separator: " & \" \" & ")
+        let promptIndex = arguments.count + 1
+        let result = PowerTool.run("/usr/bin/osascript", [
+            "-e", "on run argv",
+            "-e", "do shell script \(shellCommand) with prompt (item \(promptIndex) of argv) with administrator privileges",
+            "-e", "end run"
+        ] + arguments + [prompt], environment: ["PATH": safePath])
         guard result.code == 0 else {
             return result.output.trimmingCharacters(in: .whitespacesAndNewlines)
         }
-        return installAgent()
+        return nil
     }
 
-    private static func installAgent() -> String? {
-        guard let helper = Bundle.main.path(forAuxiliaryExecutable: "MethDealer") else {
-            return "Meth Dealer is missing from Meth.app."
+    private static func registerDealer() -> String? {
+        let service = dealer
+        if service.status == .enabled && !dealerMatchesThisApp() {
+            // launchd keeps the old bundle location; re-registering points it here.
+            try? service.unregister()
         }
-        let plistURL = agentURL(agentLabel)
-        let plist: [String: Any] = [
-            "Label": agentLabel,
-            "ProgramArguments": [helper],
-            "RunAtLoad": true,
-            "KeepAlive": true,
-            "ProcessType": "Background",
-            "StandardOutPath": "/dev/null",
-            "StandardErrorPath": "/dev/null"
-        ]
-        do {
-            try FileManager.default.createDirectory(at: plistURL.deletingLastPathComponent(), withIntermediateDirectories: true)
-            let data = try PropertyListSerialization.data(fromPropertyList: plist, format: .xml, options: 0)
-            try data.write(to: plistURL, options: .atomic)
-        } catch {
-            return "Could not install the background component: \(error.localizedDescription)"
+        var registerError: Error?
+        if service.status != .enabled {
+            do { try service.register() } catch { registerError = error }
         }
-        let target = "gui/\(getuid())"
-        _ = PowerTool.run("/bin/launchctl", ["bootout", target, plistURL.path])
-        let result = PowerTool.run("/bin/launchctl", ["bootstrap", target, plistURL.path])
-        guard result.code == 0 else {
-            return "Meth Dealer did not start: \(result.output.trimmingCharacters(in: .whitespacesAndNewlines))"
+        if service.status == .requiresApproval {
+            SMAppService.openSystemSettingsLoginItems()
+            return "macOS needs your approval to run Meth Dealer. Turn on Meth in System Settings > General > Login Items & Extensions, then choose Repair Closed-Lid Mode."
         }
-        return retireLegacyAgent(in: target)
+        guard service.status == .enabled else {
+            return "Meth Dealer did not start: \(registerError?.localizedDescription ?? "unknown error")"
+        }
+        UserDefaults.standard.set(Bundle.main.bundlePath, forKey: registeredPathKey)
+        UserDefaults.standard.set(currentVersion, forKey: registeredVersionKey)
+        return retireLegacyAgents(in: "gui/\(getuid())")
+    }
+
+    private static func dealerMatchesThisApp() -> Bool {
+        UserDefaults.standard.string(forKey: registeredPathKey) == Bundle.main.bundlePath
+    }
+
+    private static var currentVersion: String? {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String
+    }
+
+    /// An update replaces the bundle in place, so launchd keeps running the old dealer binary.
+    private static func restartDealerAfterUpdate() {
+        guard let version = currentVersion,
+              UserDefaults.standard.string(forKey: registeredVersionKey) != version else { return }
+        let result = PowerTool.run("/bin/launchctl", ["kickstart", "-k", "gui/\(getuid())/\(agentLabel)"])
+        if result.code == 0 { UserDefaults.standard.set(version, forKey: registeredVersionKey) }
+    }
+
+    private static func isTransientCopy() -> Bool {
+        let url = Bundle.main.bundleURL
+        if url.path.contains("/AppTranslocation/") { return true }
+        return (try? url.resourceValues(forKeys: [.volumeIsReadOnlyKey]).volumeIsReadOnly) == true
+    }
+
+    /// Reads Info.plist directly; Bundle(path:) caches bundles that have since been deleted.
+    private static func isThisApp(atPath path: String) -> Bool {
+        let plist = URL(fileURLWithPath: path).appendingPathComponent("Contents/Info.plist")
+        guard let info = NSDictionary(contentsOf: plist) else { return false }
+        return info["CFBundleIdentifier"] as? String == Bundle.main.bundleIdentifier
+    }
+
+    private static func hasOwnRule() -> Bool {
+        guard let path = PowerAccessScript.sudoersPath(for: NSUserName()) else { return false }
+        return FileManager.default.fileExists(atPath: path)
     }
 
     private static func agentURL(_ label: String) -> URL {
@@ -81,25 +168,19 @@ enum PowerAccessSetup {
             .appendingPathComponent("\(label).plist")
     }
 
-    private static func retireLegacyAgent(in target: String) -> String? {
-        let legacyURL = agentURL(legacyAgentLabel)
-        guard FileManager.default.fileExists(atPath: legacyURL.path) else { return nil }
-        _ = PowerTool.run("/bin/launchctl", ["bootout", "\(target)/\(legacyAgentLabel)"])
-        let oldJob = PowerTool.run("/bin/launchctl", ["print", "\(target)/\(legacyAgentLabel)"])
-        guard oldJob.code != 0 else { return "Meth Keeper is still running. Meth Dealer has started; try setup again to finish the rename." }
-        do {
-            try FileManager.default.removeItem(at: legacyURL)
-        } catch {
-            return "Meth Dealer has started, but the old login item could not be removed: \(error.localizedDescription)"
+    private static func retireLegacyAgents(in target: String) -> String? {
+        for legacyAgentLabel in legacyAgentLabels {
+            let legacyURL = agentURL(legacyAgentLabel)
+            guard FileManager.default.fileExists(atPath: legacyURL.path) else { continue }
+            _ = PowerTool.run("/bin/launchctl", ["bootout", "\(target)/\(legacyAgentLabel)"])
+            let oldJob = PowerTool.run("/bin/launchctl", ["print", "\(target)/\(legacyAgentLabel)"])
+            guard oldJob.code != 0 else { return "An older Meth background process is still running. Try setup again to finish the update." }
+            do {
+                try FileManager.default.removeItem(at: legacyURL)
+            } catch {
+                return "The old Meth login item could not be removed: \(error.localizedDescription)"
+            }
         }
         return nil
-    }
-
-    private static func shellQuote(_ value: String) -> String {
-        "'" + value.replacingOccurrences(of: "'", with: "'\\''") + "'"
-    }
-
-    private static func appleScriptQuote(_ value: String) -> String {
-        "\"" + value.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"") + "\""
     }
 }

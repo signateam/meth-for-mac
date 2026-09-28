@@ -3,59 +3,13 @@ set -euo pipefail
 
 MODE="${1:-run}"
 APP_NAME="Meth"
-BUNDLE_ID="com.toli.meth"
+BUNDLE_ID="com.toli.trymeth"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-DIST_DIR="$ROOT_DIR/dist"
-APP_BUNDLE="$DIST_DIR/$APP_NAME.app"
-CONTENTS="$APP_BUNDLE/Contents"
-BIN_DIR="$CONTENTS/MacOS"
-RESOURCE_DIR="$CONTENTS/Resources"
+APP_BUNDLE="$ROOT_DIR/dist/$APP_NAME.app"
+BIN_DIR="$APP_BUNDLE/Contents/MacOS"
 
 /usr/bin/pkill -x "$APP_NAME" >/dev/null 2>&1 || true
-cd "$ROOT_DIR"
-/usr/bin/swift build
-BUILD_DIR="$(/usr/bin/swift build --show-bin-path)"
-
-/bin/rm -rf "$APP_BUNDLE"
-/bin/mkdir -p "$BIN_DIR" "$RESOURCE_DIR" "$DIST_DIR"
-/bin/cp "$BUILD_DIR/Meth" "$BIN_DIR/Meth"
-/bin/cp "$BUILD_DIR/MethDealer" "$BIN_DIR/MethDealer"
-/bin/cp "$ROOT_DIR/script/install-power-access.sh" "$RESOURCE_DIR/install-power-access.sh"
-/usr/bin/sips -s format png "$ROOT_DIR/Assets/github-mark.svg" --out "$RESOURCE_DIR/github-mark.png" >/dev/null
-/usr/bin/sips -s format png "$ROOT_DIR/Assets/x-mark.svg" --out "$RESOURCE_DIR/x-mark.png" >/dev/null
-/bin/cp "$ROOT_DIR/Assets/OCTICONS-LICENSE.txt" "$RESOURCE_DIR/OCTICONS-LICENSE.txt"
-/bin/chmod 755 "$BIN_DIR/Meth" "$BIN_DIR/MethDealer" "$RESOURCE_DIR/install-power-access.sh"
-
-/bin/cat > "$CONTENTS/Info.plist" <<'PLIST'
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0"><dict>
-  <key>CFBundleExecutable</key><string>Meth</string>
-  <key>CFBundleIdentifier</key><string>com.toli.meth</string>
-  <key>CFBundleName</key><string>Meth</string>
-  <key>CFBundleDisplayName</key><string>Meth</string>
-  <key>CFBundlePackageType</key><string>APPL</string>
-  <key>CFBundleShortVersionString</key><string>0.1.0</string>
-  <key>CFBundleVersion</key><string>1</string>
-  <key>LSMinimumSystemVersion</key><string>15.0</string>
-  <key>NSPrincipalClass</key><string>NSApplication</string>
-  <key>LSUIElement</key><true/>
-  <key>CFBundleIconFile</key><string>AppIcon</string>
-</dict></plist>
-PLIST
-
-/usr/bin/swift "$ROOT_DIR/script/make_icon.swift" "$DIST_DIR/icon-1024.png"
-ICONSET="$DIST_DIR/AppIcon.iconset"
-/bin/mkdir -p "$ICONSET"
-for dimension in 16 32 128 256 512; do
-  /usr/bin/sips -z "$dimension" "$dimension" "$DIST_DIR/icon-1024.png" --out "$ICONSET/icon_${dimension}x${dimension}.png" >/dev/null
-done
-for dimension in 16 32 128 256 512; do
-  doubled="$((dimension * 2))"
-  /usr/bin/sips -z "$doubled" "$doubled" "$DIST_DIR/icon-1024.png" --out "$ICONSET/icon_${dimension}x${dimension}@2x.png" >/dev/null
-done
-/usr/bin/iconutil -c icns "$ICONSET" -o "$RESOURCE_DIR/AppIcon.icns"
-/usr/bin/codesign --force --deep --sign - "$APP_BUNDLE" >/dev/null
+"$ROOT_DIR/script/bundle.sh" --configuration debug
 
 case "$MODE" in
   run)
