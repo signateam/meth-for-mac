@@ -12,7 +12,7 @@
   },
   "vars": {
     // Flip to "true" once trymeth.com's Email Sending DNS records are live and a test send works.
-    "EMAIL_LINK_ENABLED": "false"
+    "EMAIL_LINK_ENABLED": "true"
   },
   "send_email": [
     { "name": "EMAIL", "remote": true }
