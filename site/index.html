@@ -108,6 +108,20 @@
   .btn { display: inline-flex; align-items: center; gap: 10px; background: var(--btn-bg); color: var(--btn-fg); padding: 14px 26px; border-radius: 999px; font-weight: 600; font-size: 16px; transition: transform .15s; }
   .btn:hover { transform: translateY(-1px); }
   .meta { font-size: 14px; color: var(--muted); }
+  .mail { margin-top: 14px; }
+  .mail [hidden] { display: none !important; }
+  .mail-open { display: inline-flex; align-items: center; gap: 7px; font: inherit; font-size: 14px; color: var(--muted); background: none; border: 0; padding: 0; cursor: pointer; }
+  .mail-open span { text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
+  .mail-open:hover { color: var(--fg); }
+  .mail-form { display: flex; max-width: 380px; padding: 4px; border: 1px solid var(--line); border-radius: 999px; background: var(--card); transition: border-color .15s; }
+  .mail-form:focus-within { border-color: color-mix(in srgb, var(--fg) 45%, var(--line)); }
+  .mail-form input[type="email"] { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--fg); font: inherit; font-size: 15px; padding: 8px 14px; outline: none; }
+  .mail-form input::placeholder { color: var(--muted); opacity: .7; }
+  .mail-form button { flex: none; border: 0; border-radius: 999px; background: var(--btn-bg); color: var(--btn-fg); font: inherit; font-size: 14px; font-weight: 600; padding: 9px 16px; cursor: pointer; }
+  .mail-form button:disabled { opacity: .6; cursor: default; }
+  .mail .hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+  .mail-status { margin-top: 8px; font-size: 13px; color: var(--muted); }
+  .mail-status:empty { display: none; }
   .share { margin-top: 16px; font-size: 14px; }
   .share a { color: var(--fg); font-weight: 600; }
   .share a:hover { color: var(--red); }
@@ -385,6 +399,16 @@
             Try Meth
           </a>
           <span class="meta">Free forever. Open source.</span>
+        </div>
+        <div class="mail" id="mail" hidden>
+          <button type="button" class="mail-open" id="mailOpen"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 4h11v8h-11zM2.5 4.5 8 9l5.5-4.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg><span id="mailOpenText">Email me the download link</span></button>
+          <form class="mail-form" id="mailForm" hidden novalidate>
+            <input id="mailInput" type="email" name="email" required autocomplete="email" inputmode="email" placeholder="you@email.com" aria-label="Your email address">
+            <input class="hp" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true">
+            <button type="submit" id="mailSend">Send link</button>
+          </form>
+          <div id="ts"></div>
+          <p class="mail-status" id="mailStatus" role="status" aria-live="polite"></p>
         </div>
         <p class="share"><a href="https://x.com/intent/post?text=Meth%20for%20your%20Mac%3A%20keeps%20it%20awake%2C%20even%20with%20the%20lid%20closed.&amp;url=https%3A%2F%2Ftrymeth.com">Tell your friends about Meth →</a></p>
       </div>
@@ -708,6 +732,56 @@
     setTimeout(() => rollTo(shown + 1), 2500 + Math.random() * 2000);
     setInterval(() => { if (!document.hidden) loadVisitors().then((m) => { if (m !== null) rollTo(m); }); }, 60000);
   });
+
+
+  // Email me the download link (for people browsing on a phone). Shown only when the
+  // Worker says sending is enabled; Turnstile loads only when someone uses the form.
+  const mail = $('mail'), mailForm = $('mailForm'), mailInput = $('mailInput'), mailSend = $('mailSend'), mailStatus = $('mailStatus');
+  const TURNSTILE_SITEKEY = '0x4AAAAAAFHWtLljwHCo4UNF';
+  const onPhone = matchMedia('(pointer: coarse)').matches || /iPhone|iPad|Android/.test(navigator.userAgent);
+  let tsLoad = null, tsWidget = null;
+  const loadTurnstile = () => tsLoad || (tsLoad = new Promise((resolve, reject) => {
+    window.onTurnstileLoad = resolve;
+    const script = document.createElement('script');
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad&render=explicit';
+    script.async = true;
+    script.onerror = () => { tsLoad = null; reject(new Error('turnstile')); };
+    document.head.appendChild(script);
+  }));
+  const turnstileToken = () => loadTurnstile().then(() => new Promise((resolve, reject) => {
+    const opts = { sitekey: TURNSTILE_SITEKEY, execution: 'execute', appearance: 'interaction-only', callback: resolve, 'error-callback': () => reject(new Error('turnstile')) };
+    if (tsWidget === null) tsWidget = window.turnstile.render('#ts', opts);
+    else { window.turnstile.remove(tsWidget); tsWidget = window.turnstile.render('#ts', opts); }
+    window.turnstile.execute(tsWidget);
+  }));
+  const openMail = () => { $('mailOpen').hidden = true; mailForm.hidden = false; };
+  $('mailOpen').addEventListener('click', () => { openMail(); mailInput.focus(); loadTurnstile().catch(() => {}); });
+  mailInput.addEventListener('focus', () => loadTurnstile().catch(() => {}), { once: true });
+  mailForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const email = mailInput.value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { mailStatus.textContent = 'That email doesn\u2019t look right.'; mailInput.focus(); return; }
+    mailSend.disabled = true; mailSend.textContent = 'Sending\u2026'; mailStatus.textContent = '';
+    const messages = { rate: 'Too many tries. Give it a minute.', email: 'That email doesn\u2019t look right.' };
+    try {
+      const token = await turnstileToken();
+      const res = await fetch('/api/email-link', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, token, company: mailForm.company.value }) });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.ok) { mailStatus.textContent = `Sent to ${email}. Open it on your Mac.`; mailForm.reset(); }
+      else mailStatus.textContent = messages[data.error] || 'Couldn\u2019t send right now. Try again in a bit.';
+    } catch {
+      mailStatus.textContent = 'Couldn\u2019t send right now. Try again in a bit.';
+    }
+    mailSend.disabled = false; mailSend.textContent = 'Send link';
+  });
+  fetch('/api/email-link', { signal: AbortSignal.timeout(4000) })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((d) => {
+      if (!d || !d.enabled) return;
+      if (onPhone) { $('mailOpenText').textContent = 'On your phone? Email me the link for your Mac'; }
+      mail.hidden = false;
+    })
+    .catch(() => {});
 
   setPhase(reduce ? 1 : 0);
 })();
