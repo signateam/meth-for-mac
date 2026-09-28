@@ -1,9 +1,10 @@
 // Sends every request to https://trymeth.com, serves the static site, and answers
-// /api/visitors with the number of visits Cloudflare Web Analytics saw recently (the last 24 hours).
+// /api/visitors with recent visits (Cloudflare Web Analytics, last 24 hours) and total downloads.
 // /api/email-link emails the download link to someone browsing on a phone (Cloudflare Email Service).
 const ACCOUNT = 'd801fe59adab888d7a28d3a7a7d181e4';
 const SITE_TAG = 'f91a6172b9d341c78547d934fe54cbc5'; // Web Analytics site for trymeth.com
 const CACHE_SECONDS = 60;
+const DMG_PATH = '/download/Meth.dmg';
 
 export default {
   async fetch(request, env, ctx) {
@@ -15,23 +16,33 @@ export default {
     }
     if (url.pathname === '/api/visitors') return visitors(request, env, ctx);
     if (url.pathname === '/api/email-link') return emailLink(request, env);
-    return env.ASSETS.fetch(request);
+    const response = await env.ASSETS.fetch(request);
+    // Count each complete download of the DMG (not HEAD checks or partial range requests).
+    if (url.pathname === DMG_PATH && request.method === 'GET' && !request.headers.has('Range') && response.status === 200) {
+      ctx.waitUntil(downloads(env, 'inc'));
+    }
+    return response;
   },
 };
 
 async function visitors(request, env, ctx) {
-  // Cloudflare's edge keeps the answer for a minute; browsers never cache it (the zone's
-  // browser-cache TTL would otherwise stretch any max-age to hours).
+  const [count, total] = await Promise.all([recentVisits(env, ctx), downloads(env, 'get').catch(() => null)]);
+  if (count === null && total === null) return fresh(JSON.stringify({ error: 'unavailable' }), 503);
+  return fresh(JSON.stringify({ visitors: count, downloads: total, window: '24h' }));
+}
+
+// Visits in the last 24 hours from Web Analytics, cached at the edge for a minute
+// (and failures for 30 seconds, so a broken token doesn't send every view to the API).
+async function recentVisits(env, ctx) {
   const cache = caches.default;
-  const key = new Request('https://trymeth.com/api/visitors');
+  const key = new Request('https://trymeth.com/api/visitors/recent');
   const cached = await cache.match(key);
-  if (cached) return fresh(await cached.text(), cached.status);
+  if (cached) return (await cached.json()).visitors ?? null;
 
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   const query = `{ viewer { accounts(filter: { accountTag: "${ACCOUNT}" }) {
     rumPageloadEventsAdaptiveGroups(limit: 1, filter: { siteTag: "${SITE_TAG}", datetime_geq: "${since}" }) { sum { visits } }
   } } }`;
-
   let count = null;
   try {
     const res = await fetch('https://api.cloudflare.com/client/v4/graphql', {
@@ -43,16 +54,29 @@ async function visitors(request, env, ctx) {
     const groups = data?.data?.viewer?.accounts?.[0]?.rumPageloadEventsAdaptiveGroups;
     if (Array.isArray(groups)) count = groups[0]?.sum?.visits ?? 0;
   } catch {}
+  const ttl = count === null ? 30 : CACHE_SECONDS;
+  ctx.waitUntil(cache.put(key, new Response(JSON.stringify({ visitors: count }), { headers: { 'Cache-Control': `max-age=${ttl}` } })));
+  return count;
+}
 
-  if (count === null) {
-    // Remember the failure briefly so a broken token doesn't send every page view to the API.
-    const body = JSON.stringify({ error: 'unavailable' });
-    ctx.waitUntil(cache.put(key, new Response(body, { status: 503, headers: { 'Cache-Control': 'max-age=30' } })));
-    return fresh(body, 503);
+// Total downloads, kept exactly in one Durable Object. DOWNLOADS_SEED is the count Cloudflare's
+// request logs showed before this counter existed, so the total includes every download.
+async function downloads(env, action) {
+  const stub = env.DOWNLOADS.get(env.DOWNLOADS.idFromName('meth-dmg'));
+  const res = await stub.fetch(`https://counter/${action}?seed=${Number(env.DOWNLOADS_SEED) || 0}`, { method: action === 'inc' ? 'POST' : 'GET' });
+  return (await res.json()).total;
+}
+
+export class DownloadCounter {
+  constructor(state) { this.state = state; }
+  async fetch(request) {
+    const url = new URL(request.url);
+    let total = await this.state.storage.get('total');
+    if (total === undefined) total = Number(url.searchParams.get('seed')) || 0;
+    if (url.pathname === '/inc') total += 1;
+    await this.state.storage.put('total', total);
+    return Response.json({ total });
   }
-  const body = JSON.stringify({ visitors: count, window: '24h' });
-  ctx.waitUntil(cache.put(key, new Response(body, { headers: { 'Cache-Control': `max-age=${CACHE_SECONDS}` } })));
-  return fresh(body);
 }
 
 function fresh(body, status = 200) {

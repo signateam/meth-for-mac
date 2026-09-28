@@ -473,7 +473,7 @@
           <button type="button" data-i="1">With Meth</button>
         </div>
       </div>
-      <p class="visitors" id="visitors" hidden><span class="n" id="visitorCount"></span> <span id="visitorNoun">people</span> considered trying Meth recently</p>
+      <p class="visitors" id="visitors" hidden><span class="n" id="visitorCount"></span> <span id="visitorNoun">people</span> considered trying Meth recently<span id="downloadsPart" hidden> · <span class="n" id="downloadCount"></span> <span id="downloadNoun">downloads</span></span></p>
       </div>
     </section>
   </main>
@@ -730,16 +730,35 @@
     if (reduce || target - shown > 12) { shown = target; render(shown); return; }
     rolling = setInterval(() => { shown++; render(shown); if (shown >= target) clearInterval(rolling); }, 160);
   };
+  // Total downloads (a permanent counter in the Worker), shown after the visitor line.
+  let downloadsShown = 0;
+  const showDownloads = (n) => {
+    if (!Number.isInteger(n) || n < 1 || n <= downloadsShown) return;
+    const first = downloadsShown === 0;
+    downloadsShown = n;
+    const el = $('downloadCount');
+    el.textContent = n.toLocaleString('en');
+    $('downloadNoun').textContent = n === 1 ? 'download' : 'downloads';
+    $('downloadsPart').hidden = false;
+    if (!first && !reduce) { el.classList.remove('tick'); void el.offsetWidth; el.classList.add('tick'); }
+  };
   const loadVisitors = () => fetch('/api/visitors', { signal: AbortSignal.timeout(4000) })
     .then((r) => (r.ok ? r.json() : null))
-    .then((d) => (d && Number.isInteger(d.visitors) ? d.visitors : null))
     .catch(() => null);
-  loadVisitors().then((n) => {
+  loadVisitors().then((d) => {
+    const n = d && Number.isInteger(d.visitors) ? d.visitors : null;
     if (n === null || n < 1) return;
     shown = n; render(n); countEl.classList.remove('tick');
+    showDownloads(d.downloads);
     visitorsEl.hidden = false;
     setTimeout(() => rollTo(shown + 1), 2500 + Math.random() * 2000);
-    setInterval(() => { if (!document.hidden) loadVisitors().then((m) => { if (m !== null) rollTo(m); }); }, 60000);
+    setInterval(() => {
+      if (document.hidden) return;
+      loadVisitors().then((m) => {
+        if (m && Number.isInteger(m.visitors)) rollTo(m.visitors);
+        if (m) showDownloads(m.downloads);
+      });
+    }, 60000);
   });
 
 

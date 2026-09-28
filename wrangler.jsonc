@@ -12,8 +12,16 @@
   },
   "vars": {
     // Flip to "true" once trymeth.com's Email Sending DNS records are live and a test send works.
-    "EMAIL_LINK_ENABLED": "true"
+    "EMAIL_LINK_ENABLED": "true",
+    // Successful DMG downloads in Cloudflare's request logs before the counter existed (2026-09-28).
+    "DOWNLOADS_SEED": "26"
   },
+  "durable_objects": {
+    "bindings": [{ "name": "DOWNLOADS", "class_name": "DownloadCounter" }]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["DownloadCounter"] }
+  ],
   "send_email": [
     { "name": "EMAIL", "remote": true }
   ],
