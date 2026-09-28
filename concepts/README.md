@@ -1,14 +1,15 @@
 # Meth vs Amphetamine comparison concepts
 
-Five square, 1200 × 1200 comparison images:
+Six square, 1200 × 1200 comparison images:
 
 1. `concept-1.png`: direct headline and side-by-side cards. Recommended starting point for a social post.
 2. `concept-2.png`: Meth's three-mode menu beside Amphetamine's broader capability set.
 3. `concept-3.png`: three-step Meth path, with Amphetamine's customization acknowledged.
 4. `concept-4.png`: editorial comparison table for readers evaluating both apps.
 5. `concept-5.png`: closed-laptop product poster with a compact comparison.
+6. `comparison-simple.png`: revised center split with both logos above the names, Meth's short path, and Amphetamine's feature list running off the bottom edge. This is the current recommended direction.
 
-`index.html` is the editable source. Open `index.html?n=1` through `n=5` to see individual concepts.
+`index.html` is the editable source. It opens the revised split by default. Add `?n=1` through `?n=5` to see the earlier concepts.
 
 ## Source and claim notes
 
