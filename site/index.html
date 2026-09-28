@@ -5,7 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Meth for your Mac: keep it awake, even with the lid closed</title>
 <meta name="description" content="Meth keeps your Mac awake, even with the lid closed. Stop walking around with your laptop ajar.">
-<meta name="theme-color" content="#0a0c0f">
+<meta name="theme-color" content="#fafaf9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e0e0d" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
 <meta property="og:title" content="Meth for your Mac">
 <meta property="og:description" content="Keep your Mac awake, even with the lid closed.">
 <meta property="og:url" content="https://trymeth.com/">
@@ -16,30 +18,50 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://trymeth.com/og.png">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
+<script>(function(){var d=document.documentElement,t;try{t=localStorage.getItem('theme')}catch(e){}if(t!=='light'&&t!=='dark')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';d.dataset.theme=t})()</script>
 <style>
   :root {
+    color-scheme: light;
     --bg: #fafaf9;
     --fg: #111110;
+    --ink: var(--fg);
     --muted: #6b6b66;
+    --faint: #8f8f89;
     --line: #e4e4e0;
     --card: #ffffff;
     --red: #e5322d;
     --red-strong: #d0211c;
-    --red-soft: rgba(229, 50, 45, .07);
     --btn-bg: #111110;
     --btn-fg: #fafaf9;
-    --visual-shadow: 0 40px 90px -40px rgba(0,0,0,.35);
+    --gut: clamp(16px, 4vw, 56px);
+    --visual-shadow: 0 1px 2px rgba(0,0,0,.04), 0 40px 90px -44px rgba(0,0,0,.28);
+    --flush: .16;
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0e0e0d;
+    --fg: #f2f2ef;
+    --muted: #9a9a94;
+    --faint: #6f6f6a;
+    --line: #262624;
+    --card: #151514;
+    --btn-bg: #f2f2ef;
+    --btn-fg: #0e0e0d;
+    --flush: .3;
+    --visual-shadow: 0 40px 90px -40px rgba(0,0,0,.8);
   }
   @media (prefers-color-scheme: dark) {
-    :root {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
       --bg: #0e0e0d;
       --fg: #f2f2ef;
       --muted: #9a9a94;
+      --faint: #6f6f6a;
       --line: #262624;
       --card: #151514;
-      --red-soft: rgba(229, 50, 45, .1);
       --btn-bg: #f2f2ef;
       --btn-fg: #0e0e0d;
+      --flush: .3;
       --visual-shadow: 0 40px 90px -40px rgba(0,0,0,.8);
     }
   }
@@ -54,146 +76,310 @@
     min-height: 100svh;
     display: flex;
     flex-direction: column;
-    padding: 20px clamp(16px, 4vw, 56px);
+    padding: 18px var(--gut) 16px;
     overflow-x: hidden;
   }
   a { color: inherit; text-decoration: none; }
   a:focus-visible, button:focus-visible { outline: 2px solid var(--red); outline-offset: 3px; }
-  header, footer { display: flex; justify-content: space-between; align-items: center; font-size: 14px; max-width: 1200px; width: 100%; margin: 0 auto; }
-  .brand { display: flex; align-items: center; gap: 8px; font-weight: 700; letter-spacing: -.01em; }
-  header nav, footer nav { display: flex; gap: 18px; align-items: center; color: var(--muted); }
-  header nav a:hover, footer a:hover { color: var(--fg); }
-  footer { color: var(--muted); }
+  header { display: flex; justify-content: space-between; align-items: center; font-size: 14px; max-width: 1200px; width: 100%; margin: 0 auto; }
+  .brand { display: flex; align-items: center; gap: 9px; font-size: 18px; font-weight: 700; letter-spacing: -.015em; }
+  .brand svg { width: 30px; height: 27px; }
+  header nav { display: flex; gap: 14px; align-items: center; color: var(--muted); }
+  header nav a:hover { color: var(--fg); }
+  .theme-btn { display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--muted); cursor: pointer; transition: color .15s, background .15s; }
+  .theme-btn:hover { color: var(--fg); background: color-mix(in srgb, var(--fg) 7%, transparent); }
+  .theme-btn .sun, :root[data-theme="dark"] .theme-btn .moon { display: none; }
+  :root[data-theme="dark"] .theme-btn .sun { display: block; }
+  :root:not([data-theme]) .theme-btn { display: none; }
 
-  main { flex: 1; display: flex; flex-direction: column; justify-content: center; max-width: 1200px; width: 100%; margin: 0 auto; padding: 28px 0; }
+  main { flex: 1; display: flex; flex-direction: column; justify-content: center; max-width: 1200px; width: 100%; margin: 0 auto; padding: 32px 0; }
 
   /* ---------- hero ---------- */
   .hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: clamp(32px, 5vw, 72px); align-items: center; }
   h1 { font-size: clamp(48px, 6.2vw, 84px); line-height: .98; letter-spacing: -0.045em; font-weight: 750; text-wrap: balance; }
   .tagline { margin-top: 22px; font-size: clamp(24px, 2.6vw, 34px); line-height: 1.15; letter-spacing: -0.03em; font-weight: 650; max-width: 20ch; text-wrap: balance; }
   .lede { margin-top: 18px; font-size: 18px; line-height: 1.45; color: var(--muted); max-width: 34ch; }
-  .cta { margin-top: 28px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .cta { margin-top: 30px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
   .btn { display: inline-flex; align-items: center; gap: 10px; background: var(--btn-bg); color: var(--btn-fg); padding: 14px 26px; border-radius: 999px; font-weight: 600; font-size: 16px; transition: transform .15s; }
   .btn:hover { transform: translateY(-1px); }
   .meta { font-size: 14px; color: var(--muted); }
-  .share { margin-top: 14px; font-size: 14px; color: var(--muted); }
-  .share a { color: var(--fg); font-weight: 600; white-space: nowrap; }
+  .share { margin-top: 16px; font-size: 14px; }
+  .share a { color: var(--fg); font-weight: 600; }
   .share a:hover { color: var(--red); }
 
-  /* ---------- the visual ---------- */
-  .visual { --alu-1: #eceef1; --alu-2: #c4c7cc; position: relative; border-radius: 28px; background: #0a0c0f; border: 1px solid #1d2026; overflow: hidden; isolation: isolate; box-shadow: var(--visual-shadow); }
+  /* Bloodshot "Meth": red veins run in from the letters' edges, clipped to the glyphs. */
+  .bs {
+    color: var(--fg);
+    /* Generated: branching, tapering veins from the cap line and baseline (viewBox = the span's box at 100px). */
+    --veins: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 220 118' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='t' gradientUnits='userSpaceOnUse' x1='0' y1='23.5' x2='0' y2='60.11'%3E%3Cstop offset='0' stop-color='%23ff3b30'/%3E%3Cstop offset='.55' stop-color='%23f0342c' stop-opacity='.95'/%3E%3Cstop offset='1' stop-color='%23e5322d' stop-opacity='0'/%3E%3C/linearGradient%3E%3ClinearGradient id='b' gradientUnits='userSpaceOnUse' x1='0' y1='100' x2='0' y2='64.39'%3E%3Cstop offset='0' stop-color='%23ff3b30'/%3E%3Cstop offset='.55' stop-color='%23f0342c' stop-opacity='.95'/%3E%3Cstop offset='1' stop-color='%23e5322d' stop-opacity='0'/%3E%3C/linearGradient%3E%3ClinearGradient id='l' gradientUnits='userSpaceOnUse' x1='0' y1='0' x2='20' y2='0'%3E%3Cstop offset='0' stop-color='%23ff3b30'/%3E%3Cstop offset='.55' stop-color='%23f0342c' stop-opacity='.95'/%3E%3Cstop offset='1' stop-color='%23e5322d' stop-opacity='0'/%3E%3C/linearGradient%3E%3ClinearGradient id='r' gradientUnits='userSpaceOnUse' x1='220' y1='0' x2='202' y2='0'%3E%3Cstop offset='0' stop-color='%23ff3b30'/%3E%3Cstop offset='.55' stop-color='%23f0342c' stop-opacity='.95'/%3E%3Cstop offset='1' stop-color='%23e5322d' stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23t)' d='M9.3 36.6l1 1 1 1 1.1 .9 1.3 .7 1.2 .7 1.2 .7 .3-.4-1.1-.9-1.2-.7-1.2-.8-1-.8-.9-1.1-.9-1zM2.9 23.8l.4 1.4 .6 1.3 .7 1.4 .8 1.2 .9 1.2 .7 1.1 .5 1.2 .5 1.2 .5 1.3 .6 1.3 .6 1.3 .9 1.3 .9 1.1 .8 1.1 .8 1.1 .7 1.2 .6 1.2 .5-.2-.5-1.3-.6-1.3-.7-1.3-.8-1.2-.8-1.1-.6-1.1-.5-1.2-.5-1.4-.4-1.3-.4-1.4-.6-1.4-.7-1.3-.7-1.1-.7-1.2-.5-1.1-.4-1.3-.4-1.3zM11.3 33.8l-.9 1-1 1-1 1-.9 1 .4 .4 1-.9 1-.9 1.1-1 1-1zM14.7 31.3l-1 .8-1.1 .8-1.2 .7-1.2 .9-1.1 .8-1 1-1 1.1 .5 .5 1-1 1-.8 1.2-.8 1.2-.7 1.2-.7 1.3-.8 1.2-.8zM13 36.8l-.8 1.1-.7 1.2-.8 1.3-.6 1.2-.7 1.2 .6 .4 .7-1.2 .8-1.2 .7-1.1 .9-1.2 .8-1zM15.3 23.4l-.1 1.5 0 1.3-.1 1.4-.2 1.3-.3 1.3-.3 1.3-.4 1.3-.4 1.3-.4 1.4-.3 1.4-.2 1.5-.1 1.4 .1 1.5 0 1.4 0 1.4 0 1.3-.2 1.4-.3 1.4 .6 .1 .4-1.4 .3-1.4 .2-1.4 .1-1.4 0-1.4 .1-1.3 .1-1.4 .3-1.3 .4-1.3 .4-1.3 .5-1.3 .5-1.4 .5-1.4 .3-1.4 .3-1.4 .2-1.4 .2-1.5 .1-1.3zM29.9 29.4l.7 1.2 .5 1.2 .5 1.3 .3 1.3 .4 1.3 .6 1.4 .7 1.2 .7 1.3 .6-.4-.7-1.2-.5-1.2-.5-1.3-.3-1.3-.2-1.5-.4-1.4-.5-1.4-.7-1.3zM31.7 38.4l0 1.5 .2 1.4 .2 1.4 .5-.1-.1-1.4-.1-1.4-.1-1.4zM30.2 36.3l.8 1.1 .6 1.2 .7 1.3 .6 1.2 .6-.3-.6-1.3-.6-1.2-.6-1.3-.7-1.3zM28.6 23.6l.3 1.5 .3 1.4 .3 1.3 .1 1.3 0 1.3-.1 1.4 0 1.4 .2 1.5 .3 1.4 .3 1.4 .2 1.3 0 1.4 0 1.3 0 1.4 .6 .1 .1-1.4 .2-1.4 .1-1.5-.1-1.4-.2-1.4-.1-1.3-.1-1.3 .1-1.4 .2-1.4 .1-1.5 0-1.5-.1-1.5-.2-1.3-.2-1.3zM44.1 28.5l-.5 1.4-.3 1.4-.2 1.5-.1 1.4 0 1.4 0 1.5 0 1.3 .6 .1 .1-1.4 .2-1.4 .1-1.4 .2-1.3 .3-1.3 .4-1.3 .5-1.2zM41.9 23.7l.5 1.5 .5 1.3 .5 1.3 .4 1.3 .2 1.2 .2 1.4 0 1.3 .1 1.4 .1 1.5 .3 1.4 .5 1.4 .6 1.3 .6 1.3 .7-.3-.5-1.3-.5-1.3-.3-1.3-.1-1.3 0-1.4 .1-1.4 0-1.4 0-1.5-.1-1.5-.3-1.4-.4-1.4-.4-1.3-.3-1.2zM59.1 34.5l.8 1.2 .6 1.2 .6 1.2 .5 1.3 .6 1.3 .6 1.3 .6-.3-.6-1.3-.5-1.3-.4-1.3-.5-1.4-.7-1.2-.6-1.3zM55.2 23.7l.4 1.4 .5 1.4 .6 1.4 .5 1.3 .6 1.2 .4 1.3 .4 1.3 .3 1.3 .3 1.4 .3 1.4 .3 1.3 .4 1.4 .4 1.4 .6 1.3 .6-.2-.4-1.3-.3-1.4-.2-1.4-.2-1.3-.2-1.4-.2-1.4-.2-1.4-.3-1.5-.4-1.4-.4-1.3-.5-1.3-.4-1.3-.3-1.3-.3-1.3zM69 28.4l.2 1.4 .1 1.4 .2 1.4 .2 1.4 .1 1.3 .1 1.4 0 1.4-.1 1.3-.2 1.4-.1 1.4 .6 .1 .2-1.4 .2-1.4 .2-1.4 .2-1.4 0-1.4-.1-1.5-.1-1.3-.1-1.4-.1-1.4 0-1.4zM71.5 23.2l-.5 1.2-.6 1.1-.7 1.1-.7 1.2-.7 1.3-.6 1.3-.5 1.4-.5 1.3-.4 1.4-.5 1.2-.6 1.3-.7 1.1-.7 1.2-.7 1.3-.5 1.3 .5 .2 .6-1.2 .8-1.1 .8-1.1 .9-1.2 .7-1.3 .6-1.3 .6-1.3 .5-1.2 .5-1.3 .7-1.1 .7-1.2 .8-1.1 .9-1.2 .8-1.3 .6-1.4zM79.4 45.6l-.7 1.3-.6 1.2-.8 1.1-.8 1.1-.9 1-.9 1-1.1 .9-1.1 .8 .3 .5 1.2-.8 1.2-.8 1.1-.9 1-1 1-1.1 .8-1.2 .7-1.2 .7-1.2zM75.4 49.6l-.2 1.4-.4 1.3-.5 1.2-.6 1.3 .5 .2 .7-1.2 .6-1.3 .4-1.4 .3-1.4zM78.3 46.3l-.9 1-1 1-.9 1-1 1.1-.9 1.1-.8 1.2-.7 1.2 .6 .3 .7-1.1 .9-1.1 .9-1 1-1 1-.9 1.1-1 .9-1zM76.4 47.7l-1.4 0-1.4 .1-1.4 0-1.4 .3 .1 .7 1.3-.2 1.4 0 1.4 .1 1.5 .1zM83.8 40.4l-.7 1.2-.8 1-.8 1-1 .8-1 .8-1.2 .8-1.1 .8-1.2 .9-1 1-1 1-.9 1.2-.7 1.2-.8 1.2 .6 .4 .8-1.1 .9-1.1 .9-1 1-.9 1-.8 1.2-.7 1.2-.7 1.2-.7 1.3-.8 1.2-.9 1.1-1.1 1-1.1 .9-1.2zM99.7 46.2l-.6 1.3-.6 1.2-.6 1.3-.7 1.2-.7 1.2-.8 1.1-.8 1.2 .5 .3 .9-1 .9-1.1 .8-1.2 .8-1.2 .7-1.2 .8-1.2 .7-1.2zM99.5 48.9l-1 .9-1.1 .8-1.2 .8-1.1 .7 .2 .5 1.3-.6 1.3-.6 1.2-.8 1.2-.8zM99.6 40.7l-.1 1.5-.1 1.5 0 1.4 0 1.4-.1 1.4-.1 1.3-.3 1.3-.3 1.4-.3 1.4-.2 1.4-.1 1.4 .6 .1 .3-1.4 .4-1.3 .4-1.3 .5-1.3 .5-1.4 .3-1.4 .3-1.5 .1-1.4 .2-1.3 .2-1.4 .3-1.2zM119.9 51.7l.5 1.2 .6 1.3 .4 1.3 .6-.2-.4-1.3-.5-1.4-.6-1.3zM119.6 45.9l.1 1.4 0 1.4 0 1.4 0 1.4 .1 1.4 .3 1.4 .3 1.4 .6-.1-.2-1.4-.1-1.3-.1-1.4 .1-1.4 .1-1.4 .1-1.4 0-1.4zM125 50.5l.8 1.2 .7 1.2 .6 1.2 .5-.2-.6-1.3-.7-1.2-.7-1.2zM122.6 49.8l1.3 .4 1.2 .5 1.3 .6 1.3 .6 .2-.6-1.2-.6-1.2-.7-1.3-.6-1.3-.6zM116.6 41.4l.5 1.3 .7 1.3 .8 1.2 .9 1.2 1 1.1 .9 1.1 .8 1 .8 1.2 .7 1.1 .6 1.2 .6 1.3 .6-.3-.4-1.3-.5-1.3-.6-1.3-.7-1.3-.8-1.2-.8-1.2-.8-1.1-.7-1.1-.6-1.1-.5-1.3-.5-1.3zM141 44.9l-.9 1-1 1 .4 .4 1-1 1-1zM140.1 38.3l.3 1.3 .3 1.4 .1 1.3 0 1.4 .1 1.4 .2 1.4 .3 1.4 .6-.1-.2-1.4-.1-1.3 0-1.4 .1-1.4 0-1.5-.2-1.4-.2-1.4zM133.1 31.6l.7 1.2 .8 1.2 1 1.2 1.1 1 1.2 .9 1.2 .9 1.1 .8 .9 .9 .9 1 .9 1 .9 1.1 1 1.1 1 .9 1.2 .9 1.2 .7 .4-.5-1.1-.9-1-.8-.9-1-.9-1.1-.7-1.1-.8-1.3-.9-1.1-1-1.1-1.1-1-1.1-.9-.9-.8-.9-1-.7-1-.7-1.2-.6-1.2zM155 58.4l1.4 .1 1.4 0 1.4 0 0-.6-1.4 0-1.4 0-1.3-.2zM152 55.1l.9 1.1 .9 1.1 .9 1 .9 1.1 .7 1.1 .5-.3-.7-1.2-.8-1.2-.8-1.1-.9-1.1-.8-1.1zM149.9 41.2l.4 1.4 .5 1.4 .4 1.3 .4 1.3 .2 1.3 .1 1.3-.1 1.3-.1 1.4 0 1.4 0 1.5 .3 1.4 .4 1.4 .4 1.4 .5 1.3 .3 1.4 .3 1.3 .5-.1-.1-1.4-.2-1.4-.3-1.4-.4-1.3-.2-1.3-.1-1.3 0-1.4 .2-1.3 .2-1.4 .1-1.5 .1-1.5-.2-1.5-.3-1.4-.3-1.4-.4-1.3-.2-1.3zM172.2 34l.6 1.1 .6 1.2 .7 1.3 .7 1.2 .9 1.2 1 1 1.1 1 1 .9 1 1 .5-.4-1-1.1-1-1-.9-1-.9-1-.7-1.1-.7-1.2-.6-1.3-.5-1.3-.7-1.3zM167 24l.8 1.3 .8 1.2 .8 1.2 .7 1.1 .6 1.2 .5 1.2 .3 1.3 .4 1.3 .5 1.4 .5 1.3 .6 1.3 .6 1.3 .6 1.3 .6 1.2 .4 1.3 .3 1.3 .3 1.4 .3 1.3 .4 1.4 .5 1.4 .5-.2-.3-1.4-.3-1.3-.2-1.4-.2-1.4-.3-1.4-.3-1.4-.5-1.4-.5-1.3-.6-1.2-.5-1.3-.4-1.3-.3-1.3-.3-1.4-.4-1.4-.4-1.5-.6-1.3-.7-1.3-.7-1.2-.7-1.1-.6-1.2zM189.8 41l-.1 1.4-.1 1.3-.3 1.4-.4 1.3-.4 1.3 .5 .2 .5-1.3 .4-1.4 .3-1.4 .2-1.4 .1-1.4zM186.2 33.5l.3 1.4 .4 1.4 .5 1.3 .7 1.3 .8 1.2 .9 1.2 .8 1.1 .8 1.1 .6 1.2 .5 1.3 .5 1.3 .6-.2-.5-1.3-.5-1.4-.6-1.3-.7-1.2-.8-1.2-.8-1.1-.7-1.2-.6-1.1-.4-1.3-.3-1.3-.2-1.4zM189.6 41.5l1.1 .9 1.1 .9 1.1 .9 1 .9 1 1 .8 1 .5-.3-.9-1.2-.9-1-1.1-1-1-.9-1.1-.9-1-1zM180.8 23.9l.5 1.3 .4 1.3 .5 1.3 .6 1.4 .8 1.2 .9 1.2 .9 1.2 .8 1.1 .8 1.1 .6 1.2 .6 1.2 .4 1.2 .4 1.4 .4 1.3 .5 1.3 .6 1.3 .8 1.3 .9 1.1 .9 1.1 .9 1.1 .5-.4-.9-1.1-.8-1.1-.7-1.2-.7-1.2-.5-1.2-.4-1.3-.4-1.4-.3-1.3-.4-1.5-.5-1.3-.6-1.3-.8-1.3-.8-1.1-.8-1.2-.7-1.1-.6-1.1-.5-1.2-.4-1.3-.4-1.4-.5-1.4zM193.4 60.7l-1.3 .5 .1 .5 1.3-.5zM195.7 57.4l-.8 1.2-.8 1-.9 1.1 .5 .4 .9-1 .9-1.1 .9-1.2zM193 40.9l0 1.5 .1 1.4 .1 1.5 .3 1.4 .2 1.4 .4 1.4 .4 1.4 .3 1.3 .3 1.3 .2 1.4 .1 1.3 .1 1.4 .1 1.4 .1 1.4 .2 1.4 .3 1.4 .6-.1-.2-1.3-.1-1.4 0-1.4 0-1.4 0-1.4 0-1.5-.2-1.4-.2-1.4-.2-1.4-.3-1.3-.3-1.4-.2-1.3-.1-1.4-.1-1.3 0-1.4 .1-1.3zM212.8 52l1 1.1 1.1 .9 1.1 .9 1.1 .9 .3-.4-1-.9-1-1-1-1-.9-1zM213.1 53l-.7 1.2-.6 1.3-.5 1.3 .5 .2 .6-1.2 .6-1.2 .7-1.2zM209.4 41.4l.6 1.3 .6 1.2 .5 1.3 .5 1.3 .3 1.3 .3 1.3 .2 1.4 .2 1.3 .3 1.4 .3 1.4 .4 1.4 .4 1.3 .6-.1-.3-1.4-.2-1.4-.2-1.3-.1-1.4-.2-1.4-.1-1.4-.1-1.5-.3-1.4-.4-1.4-.4-1.4-.5-1.3-.5-1.3z'/%3E%3Cpath fill='url(%23b)' d='M7.8 91.2l-.8-1-.8-1.1-.8-1.2-.9-1.1-1-1-1.1-1-.4 .5 1 .9 .8 1.1 .8 1.1 .7 1.3 .8 1.2 .9 1.2zM5.6 85l-.1-1.3 .1-1.4 .1-1.4-.5 0-.2 1.4-.1 1.4 .1 1.4zM7.1 87.2l-.8-1.1-.6-1.2-.7-1.2-.8-1.2-.4 .2 .6 1.3 .6 1.3 .6 1.2 .8 1.3zM7.6 83.5l.8-1.2 .6-1.2-.5-.3-.6 1.2-.7 1.2zM7 86.2l.4-1.4 .3-1.4 .3-1.3-.6-.2-.4 1.4-.3 1.3-.4 1.3zM9.2 99.7l-.3-1.3-.2-1.3-.1-1.3-.1-1.4-.1-1.4-.2-1.4-.3-1.5-.3-1.3-.3-1.4-.1-1.3 0-1.4 0-1.4-.7 0-.2 1.4-.1 1.4 0 1.5 .1 1.4 .2 1.3 .1 1.4 .1 1.4-.1 1.4 0 1.4 0 1.4 .1 1.5 .1 1.5zM23.4 93.8l.7-1.1 .8-1.1 .9-1 1-1 .9-1.1 .9-1.1 .8-1.2 .7-1.3 .7-1.2 .7-1.1 .9-1.1 .9-1.1-.4-.3-1.1 .9-.9 1.1-.9 1.2-.7 1.1-.8 1.2-.8 1.1-.8 1-1 1-1.1 1-1 1-.9 1.2-.8 1.1zM23.1 92.4l.6-1.2 .7-1.2 .8-1.1 .9-.9 1-.9 1.1-.9 1-.9 1.1-1 1-1 .8-1.2-.4-.4-.9 1.1-1 .9-1.1 .9-1.1 .8-1.2 .9-1.1 .9-1.1 1-.9 1.1-.8 1.2-.7 1.2zM26.2 99.5l-.8-1.3-.6-1.2-.5-1.2-.3-1.2-.3-1.4-.3-1.3-.5-1.4-.6-1.4-.7-1.3-.6-1.2-.5-1.2-.3-1.3-.4-1.4-.4-1.3-.6-1.4-.8-1.2-.7-1.2-.6 .3 .6 1.2 .6 1.3 .5 1.2 .3 1.4 .3 1.4 .2 1.4 .5 1.4 .5 1.3 .5 1.3 .5 1.2 .3 1.3 .3 1.3 .2 1.4 .3 1.5 .5 1.5 .5 1.3 .6 1.2zM37.3 94.1l-.2-1.3-.1-1.4 0-1.3 .2-1.4 .2-1.3 .3-1.4 .3-1.3-.6-.2-.4 1.3-.4 1.4-.4 1.4-.3 1.4-.1 1.4-.1 1.5 .1 1.4zM36 92.5l-1.3-.5-1.4-.5-1.3-.4-1.3-.4-1.3-.5-1.3-.5-1.3-.6-.3 .6 1.3 .6 1.2 .7 1.3 .6 1.3 .5 1.3 .5 1.3 .6 1.2 .5zM34.8 90.6l-.3-1.4-.5-1.3-.5-1.4-.6-1.3-.5-1.2-.6 .2 .5 1.3 .4 1.3 .4 1.3 .3 1.4 .3 1.3zM41.5 99.4l-.6-1.2-.7-1.2-1-1.2-1-1.1-.9-1.1-.9-1-.8-1.1-.7-1.2-.8-1.1-.9-1.2-1-1-1-1-1-1-.8-1.1-.5 .3 .7 1.3 .9 1.1 .9 1.1 .8 1.1 .7 1.1 .7 1.2 .7 1.3 .7 1.2 .8 1.2 .9 1.1 .8 1.1 .7 1 .6 1.2 .5 1.4zM48.7 76.7l-1.4-.1-1.4-.2-.1 .5 1.4 .2 1.4 .2zM53 80.4l-1.1-.8-1.1-.9-1-.9-.9-1-.9-1.1-1-1-.4 .4 .9 1 .9 1.1 .9 1.1 1 1.1 1.1 .9 1 .8zM57.2 99.9l-.2-1.5-.4-1.4-.4-1.4-.5-1.4-.3-1.3-.3-1.2-.1-1.4-.1-1.3 0-1.4-.1-1.4-.2-1.5-.4-1.4-.4-1.4-.5-1.3-.4-1.3-.4-1.4-.3-1.3-.2-1.4-.2-1.3-.7 0 .1 1.4 .1 1.5 .2 1.4 .3 1.4 .4 1.4 .3 1.3 .3 1.3 .2 1.3 .2 1.4 0 1.3-.1 1.4 0 1.5 .1 1.5 .1 1.4 .3 1.5 .4 1.3 .3 1.3 .2 1.3 .2 1.3zM83.6 83.4l.7-1.2 .8-1.1-.5-.3-.8 1.1-.7 1.2zM77.5 86.9l1.1-.8 1.1-.7 1.2-.7 1.3-.5 1.3-.6 1.2-.6 1.3-.7-.3-.5-1.2 .6-1.3 .5-1.3 .6-1.3 .5-1.3 .6-1.3 .7-1.2 .8zM74.8 100.4l.3-1.6 .1-1.5 .1-1.4 .1-1.3 .3-1.3 .4-1.3 .4-1.2 .6-1.3 .4-1.4 .3-1.5 .1-1.4 .2-1.4 .2-1.3 .4-1.3 .5-1.3 .6-1.2 .6-1.3-.5-.3-.7 1.3-.7 1.2-.6 1.3-.5 1.4-.4 1.4-.2 1.3-.3 1.4-.3 1.2-.5 1.3-.5 1.3-.7 1.3-.5 1.4-.4 1.4-.2 1.5-.1 1.3-.2 1.3-.3 1.2zM89.3 92l.2-1.4 .4-1.3 .4-1.3 .4-1.3 .4-1.4-.6-.2-.5 1.3-.6 1.3-.5 1.3-.5 1.4-.4 1.4zM87.1 87.7l-1.1-.8-1.1-.9-1.2-.7-1.3-.7-1.3-.6-.2 .5 1.2 .7 1.1 .7 1.2 .8 1.1 .9 1.1 .9zM91.9 99.7l-.4-1.3-.3-1.3-.3-1.4-.4-1.4-.5-1.4-.6-1.3-.6-1.3-.7-1.3-.7-1.2-.6-1.2-.5-1.3-.6-1.3-.4-1.3-.4-1.3-.6 .2 .3 1.3 .3 1.4 .4 1.4 .4 1.3 .6 1.4 .5 1.3 .6 1.2 .5 1.3 .4 1.3 .3 1.3 .3 1.3 .2 1.4 .2 1.4 .3 1.4zM109.1 90.7l.8-1.2 .8-1.1 .8-1 1-1 1-.9 1.1-.8 1.1-.8 1.1-.9 1.1-1-.4-.4-1.1 .8-1.1 .8-1.2 .7-1.2 .8-1.2 .9-1 1-1 1.1-.9 1.1-.8 1.1zM107.2 81.8l-.7-1.1-.7-1.2-.6-1.2-.6-1.3-.5 .3 .5 1.3 .5 1.3 .7 1.3 .7 1.2zM111.1 99.7l-.4-1.4-.4-1.3-.3-1.3-.2-1.3-.1-1.3-.1-1.4-.1-1.4-.3-1.5-.3-1.4-.5-1.4-.4-1.3-.3-1.3-.2-1.3-.2-1.4-.1-1.4-.3-1.4-.4-1.4-.4-1.3-.6 .1 .3 1.4 .3 1.3 .1 1.4 .1 1.4 0 1.4 .1 1.4 .3 1.5 .3 1.3 .3 1.3 .3 1.3 .1 1.4 0 1.4 0 1.4 .1 1.4 .1 1.5 .2 1.5 .3 1.4 .3 1.3zM126.3 92.3l.3-1.4 .3-1.3 .5-1.3 .6-1.2 .7-1.2 .6-1.2 .6-1.3 .5-1.3 .3-1.5-.6-.1-.4 1.3-.5 1.2-.7 1.2-.7 1.2-.8 1.2-.7 1.3-.6 1.3-.4 1.4-.4 1.4zM129.6 99.5l-.7-1.3-.7-1.2-.5-1.2-.4-1.3-.4-1.2-.4-1.4-.6-1.4-.7-1.3-.7-1.2-.6-1.2-.4-1.3-.4-1.3-.3-1.3-.3-1.4-.5-1.4-.6-1.3-.6 .3 .4 1.3 .4 1.3 .2 1.4 .2 1.4 .3 1.4 .3 1.4 .6 1.4 .6 1.2 .5 1.3 .4 1.2 .4 1.3 .2 1.4 .4 1.5 .5 1.4 .6 1.2 .5 1.3zM146.8 86.8l.9-1 .9-1.2 .8-1.1-.4-.3-.9 1.1-.8 1.1-1 1zM144.5 94.8l.7-1.2 .6-1.3 .4-1.4 .3-1.5 .2-1.4 .3-1.3 .3-1.3 .5-1.3 .6-1.2-.5-.3-.7 1.2-.6 1.3-.4 1.4-.4 1.4-.3 1.3-.3 1.3-.5 1.3-.5 1.2-.8 1.2zM145.1 92.2l.9-1 1-.9 1.1-.9 1.1-.8 1.2-.7 1.2-.9-.4-.5-1.2 .8-1.2 .7-1.2 .7-1.2 .9-1.1 .9-1 .9zM146.4 88.2l1.1-.8 1.2-.7 1.2-.8 1.1-.8-.3-.5-1.1 .8-1.3 .7-1.2 .7-1.2 .7zM143.9 100.4l.3-1.5 .3-1.5 .1-1.4 .2-1.4 .2-1.3 .3-1.3 .5-1.3 .5-1.3 .4-1.4 .2-1.4 .1-1.5-.1-1.4-.1-1.4-.5 0-.1 1.4-.1 1.4-.1 1.3-.4 1.3-.4 1.3-.6 1.3-.6 1.3-.5 1.4-.3 1.4-.3 1.4-.2 1.3-.3 1.3-.4 1.2zM157.1 89l-1-1-.9-1-.8-1.1-.7-1.2-.5 .3 .7 1.3 .8 1.1 .9 1.1 1 1zM157.9 93.4l0-1.4-.2-1.4-.3-1.4-.4-1.4-.4-1.4-.3-1.3-.3-1.4-.6 .1 .2 1.4 .2 1.4 .3 1.4 .3 1.3 .2 1.4 .1 1.3 0 1.4zM155.4 89.4l-1.3-.6-1.2-.7-1.2-.6-1.2-.8-.4 .5 1.2 .9 1.2 .7 1.2 .8 1.2 .7zM160.6 99.5l-.5-1.2-.5-1.2-.4-1.3-.5-1.4-.6-1.3-.8-1.3-.8-1.2-.9-1.1-.8-1.1-.8-1.1-.7-1.2-.6-1.3-.5-1.2-.6 .2 .5 1.3 .5 1.4 .5 1.3 .8 1.2 .7 1.2 .7 1.2 .7 1.1 .6 1.2 .4 1.3 .4 1.3 .4 1.4 .4 1.4 .5 1.4zM179.3 91.3l-1-1.1-.9-1-.9-1.1-.7-1.2-.6-1.2-.6-1.2-.5-1.3-.5-1.3-.6-1.3-.5 .2 .4 1.3 .5 1.4 .5 1.3 .5 1.3 .6 1.3 .7 1.3 .8 1.2 .9 1.1 .9 1.1zM180.6 100.2l0-1.6-.1-1.5-.4-1.4-.3-1.4-.1-1.3-.1-1.4 0-1.3 .1-1.3 .3-1.4 .2-1.3 .2-1.4 .1-1.5 0-1.4-.2-1.5-.3-1.4-.6 .1 .2 1.4 0 1.4-.1 1.3-.2 1.4-.3 1.3-.3 1.4-.4 1.4-.2 1.4-.2 1.5 0 1.5 .1 1.4 .2 1.4 .2 1.3 .1 1.3-.1 1.2zM195.5 94.3l-.4-1.3-.2-1.3 0-1.4 0-1.3-.1-1.5-.1-1.4-.3-1.4-.4-1.4-.5-1.3-.6 .2 .4 1.3 .3 1.3 .2 1.4 .1 1.3-.1 1.4 0 1.5 0 1.4 .1 1.5 .3 1.4zM197.4 89.8l1.1-.9 1.1-.9 1.1-.8 1-1-.3-.5-1.2 .8-1.1 .8-1.2 .8-1.2 .9zM194.9 100.3l.2-1.5 .2-1.4 .1-1.4 .3-1.3 .3-1.3 .5-1.2 .6-1.3 .6-1.2 .6-1.3 .5-1.3 .4-1.4 .2-1.5 .2-1.4 .1-1.4-.6-.1-.2 1.4-.3 1.4-.3 1.3-.5 1.2-.6 1.3-.7 1.2-.7 1.2-.7 1.3-.6 1.3-.5 1.4-.4 1.4-.2 1.4-.2 1.3-.3 1.3zM217.3 90.2l-.1-1.5-.3-1.4-.2-1.4-.2-1.3-.6 0 0 1.4 .1 1.4 .1 1.4 .1 1.3zM212.6 100.5l.7-1.1 .7-1.1 .8-1.1 .7-1.4 .5-1.4 .5-1.4 .4-1.3 .5-1.2 .6-1.2 .7-1.1 .8-1.2 .6-1.3 .5-1.4 .4-1.4-.6-.2-.5 1.3-.6 1.2-.7 1.2-.8 1.1-.9 1.1-.8 1.3-.7 1.3-.6 1.3-.5 1.2-.5 1.2-.7 1-.9 1.1-.9 1.2-.9 1.3z'/%3E%3Cpath fill='url(%23l)' d='M-1.4 45l1.1 1 1.1 .8 1.2 .8 1.1 .9 1 .9 .9 1 .5-.4-.9-1.1-1-1.1-1.1-.9-1.1-.9-1-.9-1-.9zM-0.6 71.9l1-.9 1.2-.8 1.1-.6 1.3-.5 1.3-.5 1.3-.6-.2-.5-1.3 .5-1.4 .3-1.4 .4-1.3 .6-1.2 .8-1.2 .8z'/%3E%3Cpath fill='url(%23r)' d='M220.6 56.4l-1.1 .9-1.1 .7-1.2 .6-1.3 .6-1.2 .7-1.2 .8 .3 .5 1.2-.7 1.3-.6 1.3-.5 1.3-.6 1.3-.6 1.2-.8zM221.4 83.6l-1.1-.9-1.1-.9-1-.9-1-.9-1-1-.9-1.1-.5 .4 .9 1.1 .9 1.1 1 1.1 1 1 1 .9 1 1z'/%3E%3C/svg%3E");
+  }
+  @supports ((-webkit-background-clip: text) or (background-clip: text)) {
+    .bs {
+      background:
+        var(--veins) 0 0 / 100% 100% no-repeat,
+        linear-gradient(rgba(229, 50, 45, var(--flush)) 20.8%, rgba(229, 50, 45, 0) 30.1% 74.6%, rgba(229, 50, 45, var(--flush)) 83.9%),
+        var(--fg);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      -webkit-box-decoration-break: clone;
+      box-decoration-break: clone;
+    }
+  }
 
-  .menubar { position: absolute; top: 0; left: 0; right: 0; height: 30px; display: flex; align-items: center; justify-content: flex-end; gap: 14px; padding: 0 18px; font-size: 13px; font-weight: 500; color: #e8eaed; background: rgba(255, 255, 255, .055); border-bottom: 1px solid rgba(255, 255, 255, .07); z-index: 4; }
-  .menubar .app { margin-right: auto; display: flex; gap: 16px; color: rgba(255,255,255,.55); }
-  .menubar .app b { color: #e8eaed; font-weight: 600; }
+  /* ---------- the visual (light terminal, space-grey MacBook) ---------- */
+  .visual {
+    --v-bg: #fdfdfc;
+    --v-border: #e2e2de;
+    --mb-bg: rgba(255, 255, 255, .72);
+    --mb-border: rgba(0, 0, 0, .07);
+    --mb-fg: #1d1d1f;
+    --mb-dim: rgba(29, 29, 31, .55);
+    --mb-press: rgba(0, 0, 0, .1);
+    --menu-bg: rgba(246, 246, 246, .96);
+    --menu-border: rgba(0, 0, 0, .12);
+    --menu-fg: #1d1d1f;
+    --menu-dim: rgba(29, 29, 31, .45);
+    --menu-hr: rgba(0, 0, 0, .1);
+    --menu-hover: #0a64d8;
+    --menu-shadow: 0 18px 40px rgba(0, 0, 0, .18), 0 0 0 .5px rgba(0, 0, 0, .06);
+    --t-fg: #8a8f96;
+    --t-cmd: #2a2d31;
+    --t-ok: #16803c;
+    --t-status: #c4521b;
+    --t-caret: #2a2d31;
+    --alu-1: #55585d;
+    --alu-2: #2f3135;
+    --alu-edge: rgba(255, 255, 255, .14);
+    --ply-1: #3a3c40;
+    --ply-2: #1f2023;
+    --kb-well: rgba(0, 0, 0, .28);
+    --key: #17181a;
+    --tp-bg: rgba(255, 255, 255, .035);
+    --tp-edge: rgba(255, 255, 255, .09);
+    --engrave: #a9acb2;
+    --engrave-o: .55;
+    --shadow-c: rgba(20, 22, 28, .5);
+    --glow-c: 120, 165, 255;
+    --glow-o: .9;
+    --steps-bg: rgba(0, 0, 0, .045);
+    --steps-border: rgba(0, 0, 0, .07);
+    --steps-fg: rgba(0, 0, 0, .55);
+    --steps-hover: #000;
+    --thumb: #1d1d1f;
+    --thumb-fg: #fff;
+    --ripple: rgba(0, 0, 0, .45);
+    --cursor-shadow: rgba(0, 0, 0, .3);
+  }
+  :root[data-theme="dark"] .visual {
+    --v-bg: #0a0c0f;
+    --v-border: #1d2026;
+    --mb-bg: rgba(255, 255, 255, .055);
+    --mb-border: rgba(255, 255, 255, .07);
+    --mb-fg: #e8eaed;
+    --mb-dim: rgba(255, 255, 255, .55);
+    --mb-press: rgba(255, 255, 255, .2);
+    --menu-bg: rgba(40, 42, 46, .96);
+    --menu-border: rgba(255, 255, 255, .1);
+    --menu-fg: #eceef0;
+    --menu-dim: rgba(255, 255, 255, .4);
+    --menu-hr: rgba(255, 255, 255, .1);
+    --menu-hover: #2f6fed;
+    --menu-shadow: 0 18px 40px rgba(0, 0, 0, .5);
+    --t-fg: #6f7a86;
+    --t-cmd: #e6e8eb;
+    --t-ok: #4cc38a;
+    --t-status: #d97757;
+    --t-caret: #e6e8eb;
+    --alu-1: #eceef1;
+    --alu-2: #c4c7cc;
+    --alu-edge: rgba(255, 255, 255, .35);
+    --ply-1: #b9bdc3;
+    --ply-2: #8f949b;
+    --kb-well: rgba(0, 0, 0, .16);
+    --key: #3a3c41;
+    --tp-bg: rgba(0, 0, 0, .06);
+    --tp-edge: rgba(0, 0, 0, .08);
+    --engrave: #000;
+    --engrave-o: .28;
+    --shadow-c: rgba(0, 0, 0, .8);
+    --glow-c: 150, 190, 255;
+    --glow-o: .9;
+    --steps-bg: rgba(255, 255, 255, .08);
+    --steps-border: rgba(255, 255, 255, .09);
+    --steps-fg: rgba(255, 255, 255, .62);
+    --steps-hover: #fff;
+    --thumb: #f2f2ef;
+    --thumb-fg: #0a0c0f;
+    --ripple: rgba(255, 255, 255, .85);
+    --cursor-shadow: rgba(0, 0, 0, .55);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .visual {
+      --v-bg: #0a0c0f;
+      --v-border: #1d2026;
+      --mb-bg: rgba(255, 255, 255, .055);
+      --mb-border: rgba(255, 255, 255, .07);
+      --mb-fg: #e8eaed;
+      --mb-dim: rgba(255, 255, 255, .55);
+      --mb-press: rgba(255, 255, 255, .2);
+      --menu-bg: rgba(40, 42, 46, .96);
+      --menu-border: rgba(255, 255, 255, .1);
+      --menu-fg: #eceef0;
+      --menu-dim: rgba(255, 255, 255, .4);
+      --menu-hr: rgba(255, 255, 255, .1);
+      --menu-hover: #2f6fed;
+      --menu-shadow: 0 18px 40px rgba(0, 0, 0, .5);
+      --t-fg: #6f7a86;
+      --t-cmd: #e6e8eb;
+      --t-ok: #4cc38a;
+      --t-status: #d97757;
+      --t-caret: #e6e8eb;
+      --alu-1: #eceef1;
+      --alu-2: #c4c7cc;
+      --alu-edge: rgba(255, 255, 255, .35);
+      --ply-1: #b9bdc3;
+      --ply-2: #8f949b;
+      --kb-well: rgba(0, 0, 0, .16);
+      --key: #3a3c41;
+      --tp-bg: rgba(0, 0, 0, .06);
+      --tp-edge: rgba(0, 0, 0, .08);
+      --engrave: #000;
+      --engrave-o: .28;
+      --shadow-c: rgba(0, 0, 0, .8);
+      --glow-c: 150, 190, 255;
+      --glow-o: .9;
+      --steps-bg: rgba(255, 255, 255, .08);
+      --steps-border: rgba(255, 255, 255, .09);
+      --steps-fg: rgba(255, 255, 255, .62);
+      --steps-hover: #fff;
+      --thumb: #f2f2ef;
+      --thumb-fg: #0a0c0f;
+      --ripple: rgba(255, 255, 255, .85);
+      --cursor-shadow: rgba(0, 0, 0, .55);
+    }
+  }
+  .visual { position: relative; border-radius: 28px; background: var(--v-bg); border: 1px solid var(--v-border); overflow: hidden; isolation: isolate; box-shadow: var(--visual-shadow); }
+
+  .menubar { position: absolute; top: 0; left: 0; right: 0; height: 30px; display: flex; align-items: center; justify-content: flex-end; gap: 14px; padding: 0 18px; font-size: 13px; font-weight: 500; color: var(--mb-fg); background: var(--mb-bg); border-bottom: 1px solid var(--mb-border); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); z-index: 4; }
+  .menubar .app { margin-right: auto; display: flex; gap: 16px; color: var(--mb-dim); }
+  .menubar .app b { color: var(--mb-fg); font-weight: 600; }
   .mb-eye { display: grid; place-items: center; width: 28px; height: 22px; border-radius: 5px; transition: background .15s; }
-  .mb-eye.pressed { background: rgba(255, 255, 255, .2); }
-  .menu { position: absolute; top: 34px; left: 0; min-width: 200px; padding: 5px; border-radius: 10px; background: rgba(40, 42, 46, .96); border: 1px solid rgba(255,255,255,.1); box-shadow: 0 18px 40px rgba(0,0,0,.5); color: #eceef0; font-size: 13px; z-index: 5; opacity: 0; transform: translateY(-4px); pointer-events: none; transition: opacity .14s, transform .14s; }
+  .mb-eye.pressed { background: var(--mb-press); }
+  .menu { position: absolute; top: 34px; left: 0; min-width: 200px; padding: 5px; border-radius: 10px; background: var(--menu-bg); border: 1px solid var(--menu-border); box-shadow: var(--menu-shadow); color: var(--menu-fg); font-size: 13px; z-index: 5; opacity: 0; transform: translateY(-4px); pointer-events: none; transition: opacity .14s, transform .14s; -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); }
   .menu.open { opacity: 1; transform: none; }
   .menu div { padding: 4px 10px 4px 24px; border-radius: 5px; position: relative; white-space: nowrap; }
-  .menu .dim { color: rgba(255,255,255,.4); }
+  .menu .dim { color: var(--menu-dim); }
   .menu .check::before { content: "✓"; position: absolute; left: 8px; font-size: 12px; }
-  .menu .hover { background: #2f6fed; color: #fff; }
-  .menu hr { border: 0; height: 1px; background: rgba(255,255,255,.1); margin: 5px 8px; }
+  .menu .hover { background: var(--menu-hover); color: #fff; }
+  .menu hr { border: 0; height: 1px; background: var(--menu-hr); margin: 5px 8px; }
 
-  .term { position: absolute; left: 0; right: 0; top: 30px; height: 40%; padding: 0 28px 0; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden; font: 500 13px/1.6 ui-monospace, "SF Mono", Menlo, monospace; color: #6f7a86; -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 60%); mask-image: linear-gradient(to bottom, transparent 0, #000 60%); }
+  .term { position: absolute; left: 0; right: 0; top: 30px; height: 24%; padding: 0 28px 0; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden; font: 500 13px/1.6 ui-monospace, "SF Mono", Menlo, monospace; color: var(--t-fg); -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 60%); mask-image: linear-gradient(to bottom, transparent 0, #000 60%); }
   .term .l { flex: none; white-space: pre; }
-  .term .cmd { color: #e6e8eb; }
-  .term .ok { color: #4cc38a; }
-  .term .status { flex: none; color: #d97757; white-space: pre; }
-  .term .status::after { content: ""; display: inline-block; width: 8px; height: 15px; margin-left: 6px; vertical-align: -3px; background: #e6e8eb; animation: caret 1s steps(1) infinite; }
+  .term .cmd { color: var(--t-cmd); }
+  .term .ok { color: var(--t-ok); }
+  .term .status { flex: none; color: var(--t-status); white-space: pre; }
+  .term .status::after { content: ""; display: inline-block; width: 8px; height: 15px; margin-left: 6px; vertical-align: -3px; background: var(--t-caret); animation: caret 1s steps(1) infinite; }
   @keyframes caret { 50% { opacity: 0; } }
 
-  .cursor { position: absolute; left: 0; top: 0; width: 60px; height: 81px; z-index: 6; pointer-events: none; opacity: 0; transform-origin: 5px 5px; filter: drop-shadow(0 10px 18px rgba(0,0,0,.55)); }
-  .ripple { position: absolute; width: 64px; height: 64px; margin: -32px 0 0 -32px; border-radius: 50%; border: 2px solid rgba(255,255,255,.85); z-index: 6; pointer-events: none; opacity: 0; }
+  .cursor { position: absolute; left: 0; top: 0; width: 60px; height: 81px; z-index: 6; pointer-events: none; opacity: 0; transform-origin: 5px 5px; filter: drop-shadow(0 10px 18px var(--cursor-shadow)); }
+  .ripple { position: absolute; width: 64px; height: 64px; margin: -32px 0 0 -32px; border-radius: 50%; border: 2px solid var(--ripple); z-index: 6; pointer-events: none; opacity: 0; }
 
-  .stage { position: relative; z-index: 1; width: 100%; aspect-ratio: 560 / 470; }
-  .scene { position: absolute; left: 0; top: 0; width: 560px; height: 470px; transform-origin: 0 0; perspective: 1500px; perspective-origin: 50% 20%; }
+  /* The scene is a fixed 680 x 580 box scaled to the card. The laptop sits a touch below the centre of the space between the menu bar and the toggle, because the carrying motion lifts it on average. */
+  .stage { position: relative; z-index: 1; width: 100%; aspect-ratio: 680 / 580; }
+  .scene { position: absolute; left: 0; top: 0; width: 680px; height: 580px; transform-origin: 0 0; perspective: 1500px; perspective-origin: 50% 20%; }
   .rig { position: absolute; inset: 0; transform-style: preserve-3d; }
-  .laptop { position: absolute; left: 45%; top: 66%; width: 400px; height: 266px; margin: -133px 0 0 -200px; transform-style: preserve-3d; transform: rotateX(58deg) rotateZ(-28deg); }
+  .laptop { position: absolute; left: 50%; top: 45.9%; width: 400px; height: 266px; margin: -133px 0 0 -200px; transform-style: preserve-3d; transform: rotateX(58deg) rotateZ(-28deg); }
   .laptop * { outline: 1px solid transparent; }
-  .shadow { position: absolute; inset: 0 -40px -70px; background: radial-gradient(closest-side, rgba(0,0,0,.8), rgba(0,0,0,0)); transform: translateZ(-30px); }
-  .ply { position: absolute; inset: 0; border-radius: 18px; background: linear-gradient(160deg, #b9bdc3, #8f949b); }
-  .base { position: absolute; inset: 0; border-radius: 18px; background: linear-gradient(160deg, var(--alu-1), var(--alu-2)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.35); }
-  .kb { position: absolute; left: 30px; right: 30px; top: 26px; height: 124px; display: grid; grid-template-columns: repeat(13, 1fr); grid-auto-rows: 1fr; gap: 4px; padding: 6px; border-radius: 8px; background: rgba(0,0,0,.16); }
-  .kb i { background: #3a3c41; border-radius: 3px; }
-  .tp { position: absolute; left: 50%; top: 166px; width: 150px; height: 82px; margin-left: -75px; border-radius: 10px; background: rgba(0,0,0,.06); box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
-  .glow { position: absolute; inset: -80px -50px 0; background: radial-gradient(closest-side, rgba(150, 190, 255, .9), rgba(150, 190, 255, 0)); transform: translateZ(1px); opacity: 0; }
+  .shadow { position: absolute; inset: 0 -40px -70px; background: radial-gradient(closest-side, var(--shadow-c), transparent); transform: translateZ(-30px); }
+  .ply { position: absolute; inset: 0; border-radius: 18px; background: linear-gradient(160deg, var(--ply-1), var(--ply-2)); }
+  .base { position: absolute; inset: 0; border-radius: 18px; background: linear-gradient(160deg, var(--alu-1), var(--alu-2)); box-shadow: inset 0 0 0 1px var(--alu-edge); }
+  .kb { position: absolute; left: 30px; right: 30px; top: 26px; height: 124px; display: grid; grid-template-columns: repeat(13, 1fr); grid-auto-rows: 1fr; gap: 4px; padding: 6px; border-radius: 8px; background: var(--kb-well); }
+  .kb i { background: var(--key); border-radius: 3px; }
+  .tp { position: absolute; left: 50%; top: 166px; width: 150px; height: 82px; margin-left: -75px; border-radius: 10px; background: var(--tp-bg); box-shadow: inset 0 0 0 1px var(--tp-edge); }
+  .glow { position: absolute; inset: -80px -50px 0; background: radial-gradient(closest-side, rgba(var(--glow-c), var(--glow-o)), rgba(var(--glow-c), 0)); transform: translateZ(1px); opacity: 0; }
   .lid { position: absolute; left: 0; right: 0; bottom: 100%; height: 266px; transform-origin: 50% 100%; transform-style: preserve-3d; transform: translateZ(2px) rotateX(-153deg); }
   .screen, .lid-back { position: absolute; inset: 0; border-radius: 18px; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
   .screen { background: #0c0c0d; padding: 12px; }
   .display { height: 100%; border-radius: 6px; background: linear-gradient(#3a5fa0, #0d1422); }
-  .lid-back { transform: translateZ(-7.2px) rotateY(180deg); background: linear-gradient(200deg, var(--alu-1), var(--alu-2)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.3); display: grid; place-items: center; }
-  .lid-back svg { width: 64px; opacity: .28; }
+  .lid-back { transform: translateZ(-7.2px) rotateY(180deg); background: linear-gradient(200deg, var(--alu-1), var(--alu-2)); box-shadow: inset 0 0 0 1px var(--alu-edge); display: grid; place-items: center; color: var(--engrave); }
+  .lid-back svg { width: 64px; opacity: var(--engrave-o); }
 
-  .steps { position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 4; display: grid; grid-template-columns: 1fr 1fr; padding: 4px; border-radius: 999px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.09); }
-  .steps::before { content: ""; position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px); border-radius: 999px; background: #f2f2ef; transition: transform .45s cubic-bezier(.3,.7,.2,1), background .3s; }
+  .steps { position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 4; display: grid; grid-template-columns: 1fr 1fr; padding: 4px; border-radius: 999px; background: var(--steps-bg); border: 1px solid var(--steps-border); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+  .steps::before { content: ""; position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px); border-radius: 999px; background: var(--thumb); transition: transform .45s cubic-bezier(.3,.7,.2,1), background .3s; }
   .steps[data-phase="1"]::before { transform: translateX(100%); background: var(--red-strong); }
-  .steps button { position: relative; z-index: 1; font: inherit; font-size: 14px; font-weight: 600; white-space: nowrap; color: rgba(255,255,255,.62); background: transparent; border: 0; border-radius: 999px; padding: 10px 20px; cursor: pointer; transition: color .3s; }
-  .steps button:hover { color: #fff; }
-  .steps[data-phase="0"] button[data-i="0"] { color: #0a0c0f; }
+  .steps button { position: relative; z-index: 1; font: inherit; font-size: 14px; font-weight: 600; white-space: nowrap; color: var(--steps-fg); background: transparent; border: 0; border-radius: 999px; padding: 10px 20px; cursor: pointer; transition: color .3s; }
+  .steps button:hover { color: var(--steps-hover); }
+  .steps[data-phase="0"] button[data-i="0"] { color: var(--thumb-fg); }
   .steps[data-phase="1"] button[data-i="1"] { color: #fff; }
 
-  /* ---------- modes ---------- */
-  .modes { margin-top: 40px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; list-style: none; padding: 0; }
-  .mode { display: flex; align-items: center; gap: 16px; padding: 18px 22px; border: 1px solid var(--line); border-radius: 20px; background: var(--card); }
-  .mode svg { flex: none; width: 32px; height: auto; }
-  .mode h2 { font-size: 17px; font-weight: 700; letter-spacing: -.02em; line-height: 1.2; }
-  .mode p { font-size: 14.5px; color: var(--muted); line-height: 1.4; margin-top: 2px; }
-  .mode.meth { border-color: transparent; background: linear-gradient(var(--red-soft), var(--red-soft)), var(--card); box-shadow: 0 0 0 1px color-mix(in srgb, var(--red) 55%, transparent), 0 12px 40px -14px rgba(229,50,45,.45); }
-  
+  /* ---------- footer ---------- */
+  .fine { font-size: 11.5px; line-height: 1.5; color: var(--faint); }
+  .fine a { color: inherit; text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 40%, transparent); text-underline-offset: 2px; }
+  .fine a:hover { color: var(--fg); }
+  .foot { display: grid; gap: 2px; justify-items: center; text-align: center; padding: 10px 0 0; }
+  .about { font-size: 13px; color: var(--faint); margin-bottom: 4px; text-wrap: balance; }
+  .foot-line { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px 18px; font-size: 13px; color: var(--muted); }
+  .foot-line a { text-decoration: none; }
+  .foot-line a:hover { color: var(--fg); }
+  .foot-line b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .maker { display: inline-flex; align-items: center; gap: 8px; }
+  .maker img { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; }
+
   @media (min-width: 901px) and (max-height: 820px) {
     main { padding: 12px 0; }
-    h1 { font-size: clamp(36px, 7vh, 60px); }
+    h1 { font-size: clamp(40px, 8vh, 66px); }
     .tagline { margin-top: 14px; font-size: clamp(22px, 4vh, 32px); }
     .lede { margin-top: 12px; }
     .cta { margin-top: 20px; }
-    .modes { margin-top: 24px; }
-    .stage { aspect-ratio: 560 / 420; }
   }
   @media (max-width: 900px) {
     .hero { grid-template-columns: 1fr; }
-    .modes { grid-template-columns: 1fr; }
   }
   @media (max-width: 600px) {
     .tagline { white-space: normal; line-height: 1.02; }
-    .stage { margin: 24px 0 64px; }
-    .term { font-size: 11px; padding: 0 16px; }
+    .visual { margin: 8px 0 24px; }
+    .term { height: 19%; font-size: 11px; padding: 0 16px; }
     .menubar .app span { display: none; }
     .cursor { width: 44px; height: 60px; transform-origin: 4px 4px; }
+    .steps { bottom: 14px; }
     .steps button { padding: 9px 14px; font-size: 13px; }
   }
   @media (prefers-reduced-motion: reduce) {
     .term .status::after { animation: none; }
-    .menu, .btn, .steps::before, .steps button, .mb-eye { transition: none; }
+    .menu, .btn, .steps::before, .steps button, .mb-eye, .theme-btn { transition: none; }
   }
 </style>
 </head>
 <body>
   <header>
     <a class="brand" href="/" aria-label="Meth home">
-      <svg width="22" height="20" viewBox="0 0 21 19" aria-hidden="true"><path d="M1.5 9.5C6 1 15 1 19.5 9.5C15 18 6 18 1.5 9.5Z" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linejoin="round"/><ellipse cx="10.5" cy="9.5" rx="2.4" ry="4.3" fill="var(--red)"/></svg>
+      <svg viewBox="0 0 21 19" aria-hidden="true"><path d="M1.5 9.5C6 1 15 1 19.5 9.5C15 18 6 18 1.5 9.5Z" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/><ellipse cx="10.5" cy="9.5" rx="2.4" ry="4.3" fill="var(--red)"/></svg>
       Meth
     </a>
     <nav>
       <a href="https://github.com/tolimarchuk">GitHub</a>
+      <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch theme">
+        <svg class="moon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+        <svg class="sun" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
     </nav>
   </header>
 
   <main>
     <section class="hero">
       <div>
-        <h1>Meth for your Mac.</h1>
+        <h1><span class="bs">Meth</span> for your Mac.</h1>
         <p class="tagline">Keep your Mac awake, even with the lid closed.</p>
         <p class="lede">Stop walking around with your laptop ajar. Close the lid and your agents keep running.</p>
         <div class="cta">
           <a class="btn" href="/download/Meth.dmg">
             <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m0 0L4.5 6.5M8 10l3.5-3.5M3 13h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            Get Meth
+            Try Meth
           </a>
-          <span class="meta">Free · macOS 15+</span>
+          <span class="meta">Free forever. Open source.</span>
         </div>
-        <p class="share">Know someone who carries theirs ajar? <a href="https://x.com/intent/post?text=Meth%20for%20your%20Mac%3A%20keeps%20it%20awake%2C%20even%20with%20the%20lid%20closed.&amp;url=https%3A%2F%2Ftrymeth.com">Send them this →</a></p>
+        <p class="share"><a href="https://x.com/intent/post?text=Meth%20for%20your%20Mac%3A%20keeps%20it%20awake%2C%20even%20with%20the%20lid%20closed.&amp;url=https%3A%2F%2Ftrymeth.com">Tell your friends about Meth →</a></p>
       </div>
 
       <div class="visual" id="visual">
@@ -231,7 +417,7 @@
                 <div class="lid" id="lid">
                   <div class="screen"><div class="display"></div></div>
                   <div id="lidPlies"></div>
-                  <div class="lid-back"><svg viewBox="0 0 21 19"><path d="M1.5 9.5C6 1 15 1 19.5 9.5C15 18 6 18 1.5 9.5Z" fill="none" stroke="#000" stroke-width="1.2"/><ellipse cx="10.5" cy="9.5" rx="2.4" ry="4.3" fill="#000"/></svg></div>
+                  <div class="lid-back"><svg viewBox="0 0 21 19"><path d="M1.5 9.5C6 1 15 1 19.5 9.5C15 18 6 18 1.5 9.5Z" fill="none" stroke="currentColor" stroke-width="1.2"/><ellipse cx="10.5" cy="9.5" rx="2.4" ry="4.3" fill="currentColor"/></svg></div>
                 </div>
               </div>
             </div>
@@ -247,30 +433,16 @@
         </div>
       </div>
     </section>
-
-    <ul class="modes">
-      <li class="mode">
-        <svg viewBox="0 0 21 19" aria-hidden="true"><path d="M1.5 9.5C6 1 15 1 19.5 9.5C15 18 6 18 1.5 9.5Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><ellipse cx="10.5" cy="9.5" rx="2.4" ry="4.3" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>
-        <div><h2>Off</h2><p>Your Mac sleeps normally.</p></div>
-      </li>
-      <li class="mode">
-        <svg viewBox="0 0 21 19" aria-hidden="true"><path d="M1.5 9.5C6 1 15 1 19.5 9.5C15 18 6 18 1.5 9.5Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><ellipse cx="10.5" cy="9.5" rx="2.4" ry="4.3" fill="currentColor"/></svg>
-        <div><h2>Caffeine</h2><p>Stays awake while the lid is open.</p></div>
-      </li>
-      <li class="mode meth">
-        <svg viewBox="0 0 21 19" aria-hidden="true"><path d="M1.5 9.5C6 1 15 1 19.5 9.5C15 18 6 18 1.5 9.5Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><ellipse cx="10.5" cy="9.5" rx="2.4" ry="4.3" fill="var(--red)"/></svg>
-        <div><h2>Meth</h2><p>Stays awake with the lid closed.</p></div>
-      </li>
-    </ul>
   </main>
 
-  <footer>
-    <span>© 2026 Meth</span>
-    <nav>
-      <a href="/privacy.html">Privacy</a>
-      <a href="https://x.com/tolibear_">@tolibear_</a>
-      <a href="https://github.com/tolimarchuk">GitHub</a>
-    </nav>
+  <footer class="foot">
+    <p class="about">Meth is a simple Mac app that keeps your Mac running, even with the lid closed.</p>
+    <p class="foot-line">
+      <a class="maker" href="https://heysigna.com/?utm_source=trymeth.com&amp;utm_medium=referral&amp;utm_campaign=meth&amp;utm_content=footer"><img src="maker.webp" width="22" height="22" alt="" loading="lazy" decoding="async">Built by Toli Marchuk at heysigna.com</a>
+      <a href="https://x.com/tolibear_">@tolibear_ on X</a>
+      <a href="https://goalbuddy.dev">From the maker of GoalBuddy · <b>★ <span id="gb-stars">800+</span></b></a>
+    </p>
+    <p class="fine">Independent project. Not affiliated with Apple. <a href="/privacy">Privacy</a></p>
   </footer>
 
 <script>
@@ -278,6 +450,38 @@
   const $ = (id) => document.getElementById(id);
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+  // Theme: follow the system until the visitor picks one, then remember it.
+  const root = document.documentElement, themeBtn = $('themeBtn'), darkQ = matchMedia('(prefers-color-scheme: dark)');
+  const storedTheme = () => { try { return localStorage.getItem('theme'); } catch (e) { return null; } };
+  const setTheme = (t) => {
+    root.dataset.theme = t;
+    themeBtn.setAttribute('aria-label', t === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
+  };
+  setTheme(root.dataset.theme || (darkQ.matches ? 'dark' : 'light'));
+  themeBtn.addEventListener('click', () => {
+    const t = root.dataset.theme === 'dark' ? 'light' : 'dark';
+    setTheme(t);
+    try { localStorage.setItem('theme', t); } catch (e) {}
+  });
+  darkQ.addEventListener('change', (e) => { if (!storedTheme()) setTheme(e.matches ? 'dark' : 'light'); });
+
+  // GoalBuddy stars, cached for ten minutes. '800+' stays on any failure.
+  (async () => {
+    const el = $('gb-stars'), key = 'gb-stars';
+    try {
+      const hit = JSON.parse(sessionStorage.getItem(key) || 'null');
+      if (hit && Date.now() - hit.t < 600000) { el.textContent = hit.n.toLocaleString('en'); return; }
+    } catch (e) {}
+    try {
+      const res = await fetch('https://api.github.com/repos/tolimarchuk/goalbuddy', { signal: AbortSignal.timeout(3000) });
+      if (!res.ok) return;
+      const n = (await res.json()).stargazers_count;
+      if (typeof n !== 'number') return;
+      el.textContent = n.toLocaleString('en');
+      try { sessionStorage.setItem(key, JSON.stringify({ n, t: Date.now() })); } catch (e) {}
+    } catch (e) {}
+  })();
 
   // Keyboard: five rows of keys plus a spacebar row.
   const keys = [];
@@ -292,7 +496,7 @@
 
   // Scale the fixed-size 3D scene to its container.
   const stage = $('stage'), scene = $('scene');
-  const fit = () => { scene.style.transform = `scale(${stage.clientWidth / 560})`; };
+  const fit = () => { scene.style.transform = `scale(${stage.clientWidth / 680})`; };
   fit();
 
   // The agent never stops, whatever the lid is doing.

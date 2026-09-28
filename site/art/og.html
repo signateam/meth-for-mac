@@ -1,28 +1,46 @@
 <!doctype html><html><head><meta charset="utf-8"><style>
 *{margin:0;box-sizing:border-box}
-body{width:1200px;height:630px;background:#0a0c0f;color:#f2f2ef;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif;-webkit-font-smoothing:antialiased;padding:80px 88px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
-.bg{position:absolute;inset:0;font:13px/1.8 ui-monospace,Menlo,monospace;color:#39414b;padding:40px 0 0 780px;white-space:pre;-webkit-mask-image:linear-gradient(90deg,transparent 62%,#000 85%)}
-.bg .ok{color:#2c7a50}
-h1{position:relative;font-size:104px;line-height:1;letter-spacing:-.045em;font-weight:750;max-width:900px}
-p{position:relative;font-size:44px;font-weight:600;letter-spacing:-.03em;margin-top:24px;max-width:760px;line-height:1.15;color:#c9ccd1}
-p span{color:#e5322d}
-.foot{position:relative;display:flex;align-items:center;gap:14px;font-size:24px;font-weight:600;color:#9aa1a9}
+body{width:1200px;height:630px;background:#fafaf9;color:#111214;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif;-webkit-font-smoothing:antialiased;position:relative;overflow:hidden}
+h1{position:absolute;left:76px;top:50%;transform:translateY(-54%);font-size:134px;line-height:.94;letter-spacing:-.045em;font-weight:750;white-space:nowrap}
+.foot{position:absolute;left:84px;bottom:52px;display:flex;align-items:center;gap:12px;font-size:24px;font-weight:600;letter-spacing:-.01em;color:#6b6e73}
+
+/* the MacBook, from the site's hero, in dark space grey */
+.scene{position:absolute;left:652px;top:0;width:540px;height:630px;perspective:1500px;perspective-origin:50% 22%}
+.laptop{--alu-1:#55585d;--alu-2:#2f3135;position:absolute;left:50%;top:50%;width:400px;height:266px;margin:-146px 0 0 -212px;transform-style:preserve-3d;transform:scale(1.07) rotateX(58deg) rotateZ(-28deg)}
+.laptop *{outline:1px solid transparent}
+.shadow{position:absolute;inset:10px -30px -60px;background:radial-gradient(closest-side,rgba(20,22,26,.42),rgba(20,22,26,0));transform:translateZ(-30px)}
+.ply{position:absolute;inset:0;border-radius:18px;background:linear-gradient(160deg,#3a3c40,#1e1f22)}
+.base{position:absolute;inset:0;border-radius:18px;background:linear-gradient(160deg,var(--alu-1),var(--alu-2));box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+.kb{position:absolute;left:30px;right:30px;top:26px;height:124px;display:grid;grid-template-columns:repeat(13,1fr);grid-auto-rows:1fr;gap:4px;padding:6px;border-radius:8px;background:rgba(0,0,0,.28)}
+.kb i{background:#17181a;border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.tp{position:absolute;left:50%;top:166px;width:150px;height:82px;margin-left:-75px;border-radius:10px;background:rgba(255,255,255,.035);box-shadow:inset 0 0 0 1px rgba(0,0,0,.35)}
+.glow{position:absolute;inset:-100px -70px -30px;background:radial-gradient(closest-side,rgba(110,165,255,1),rgba(120,170,255,0));transform:translateZ(1px)}
+.lid{position:absolute;left:0;right:0;bottom:100%;height:266px;transform-origin:50% 100%;transform-style:preserve-3d;transform:translateZ(2px) rotateX(-153deg)}
+.screen,.lid-back{position:absolute;inset:0;border-radius:18px;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.screen{background:#0c0c0d;padding:12px}
+.display{height:100%;border-radius:6px;background:linear-gradient(#3a5fa0,#0d1422)}
+.lid-back{transform:translateZ(-7.2px) rotateY(180deg);background:linear-gradient(200deg,var(--alu-1),var(--alu-2));box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);display:grid;place-items:center}
+.lid-back svg{width:64px;opacity:.55}
 </style></head><body>
-<div class="bg">› fix flaky checkout test
-  edit   src/cart/checkout.ts   +12 −4
-  run    npm test
-<span class="ok">  ✓ 142 passed</span>
-› migrate users table
-  write  migrations/0042-users.sql
-<span class="ok">  ✓ migrated 18,204 rows</span>
-› add rate limiting to /api/login
-  edit   src/api/login.ts       +31 −2
-<span class="ok">  ✓ 23 passed</span>
-› open pull request
-<span class="ok">  ✓ PR #218 ready for review</span>
-› update docs for the new endpoint
-  edit   docs/api.md            +48
-<span class="ok">  ✓ done while the lid was closed</span></div>
-<div><h1>Meth for your Mac.</h1><p>Keep your Mac awake,<br>even with the lid closed.</p></div>
-<div class="foot"><svg width="42" height="38" viewBox="0 0 21 19"><path d="M1.5 9.5C6 1 15 1 19.5 9.5C15 18 6 18 1.5 9.5Z" fill="none" stroke="#f2f2ef" stroke-width="1.5" stroke-linejoin="round"/><ellipse cx="10.5" cy="9.5" rx="2.4" ry="4.3" fill="#e5322d"/></svg>trymeth.com</div>
+<h1>Meth for<br>your Mac.</h1>
+<div class="foot"><svg width="30" height="27" viewBox="0 0 21 19"><path d="M1.5 9.5C6 1 15 1 19.5 9.5C15 18 6 18 1.5 9.5Z" fill="none" stroke="#111214" stroke-width="1.65" stroke-linejoin="round"/><ellipse cx="10.5" cy="9.5" rx="2.4" ry="4.3" fill="#e5322d"/></svg>trymeth.com</div>
+<div class="scene"><div class="laptop">
+  <div class="shadow"></div>
+  <div id="plies"></div>
+  <div class="base"><div class="kb" id="kb"></div><div class="tp"></div></div>
+  <div class="glow"></div>
+  <div class="lid">
+    <div class="screen"><div class="display"></div></div>
+    <div id="lidPlies"></div>
+    <div class="lid-back"><svg viewBox="0 0 21 19"><path d="M1.5 9.5C6 1 15 1 19.5 9.5C15 18 6 18 1.5 9.5Z" fill="none" stroke="#1a1b1e" stroke-width="1.2"/><ellipse cx="10.5" cy="9.5" rx="2.4" ry="4.3" fill="#e5322d"/></svg></div>
+  </div>
+</div></div>
+<script>
+const keys=[];for(let i=0;i<65;i++)keys.push('<i></i>');
+[1,1,2,5,2,1,1].forEach(s=>keys.push(`<i style="grid-column:span ${s}"></i>`));
+document.getElementById('kb').innerHTML=keys.join('');
+const plies=(n,step,off)=>Array.from({length:n},(_,i)=>`<div class="ply" style="transform:translateZ(${-(i+off)*step}px)"></div>`).join('');
+document.getElementById('plies').innerHTML=plies(24,.5,1);
+document.getElementById('lidPlies').innerHTML=plies(14,.5,.5);
+</script>
 </body></html>
