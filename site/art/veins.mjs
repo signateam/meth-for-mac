@@ -13,6 +13,7 @@ const DEPTH = GLYPH * 0.5;
 const topAt = (x) => (x < 80 ? CAP : x < 134 ? XH : x < 142 ? 34 : x < 166 ? XH : x < 184 ? CAP : XH);
 
 const polys = [];
+let MINW = 0.55; // thinnest a vein tapers to; capillaries go finer
 function vein(x, y, ang, len, w0, depth, group) {
   const pts = [];
   let a = ang, s = 0, px = x, py = y;
@@ -23,7 +24,7 @@ function vein(x, y, ang, len, w0, depth, group) {
   branches.sort((p, q) => p - q);
   const step = 1.4;
   while (s <= len) {
-    const w = 0.55 + (w0 - 0.55) * Math.pow(1 - s / len, 0.9);
+    const w = MINW + (w0 - MINW) * Math.pow(1 - s / len, 0.9);
     pts.push([px, py, a, w]);
     if (branches.length && s >= branches[0]) {
       branches.shift();
@@ -60,10 +61,21 @@ for (let x = 5; x < W - 1; x += R(9, 13)) {
 for (const y of [CAP + GLYPH * 0.28, CAP + GLYPH * 0.66]) vein(-1, y + R(-4, 4), (y < 60 ? 0.75 : -0.75) + R(-0.12, 0.12), 9, 1.2, 1, 'l');
 for (const y of [CAP + GLYPH * 0.42, CAP + GLYPH * 0.78]) vein(W + 1, y + R(-4, 4), Math.PI + (y < 60 ? -0.75 : 0.75) + R(-0.12, 0.12), 9, 1.2, 1, 'r');
 
+// Capillaries: a dense web of short, hair-thin, faint pink vessels under the main veins.
+// At reading size they blur into a pink tinge along the edges; up close they read as fine veins.
+MINW = 0.18;
+for (let x = 1; x < W; x += R(2.2, 4)) vein(x, topAt(x) - 2, Math.PI / 2 + R(-0.9, 0.9), R(4, 12), R(0.45, 0.75), 1, 'c');
+for (let x = 1; x < W; x += R(2.2, 4)) vein(x, BASE + 2, -Math.PI / 2 + R(-0.9, 0.9), R(4, 12), R(0.45, 0.75), 1, 'c');
+for (let i = 0; i < 45; i++) {
+  const x = R(0, W), top = rnd() < 0.5;
+  vein(x, top ? topAt(x) + R(4, 14) : BASE - R(4, 14), R(0, 6.28), R(3, 7), R(0.3, 0.5), 2, 'c');
+}
+
 const grad = (id, x1, y1, x2, y2) => `<linearGradient id='${id}' gradientUnits='userSpaceOnUse' x1='${x1}' y1='${y1}' x2='${x2}' y2='${y2}'><stop offset='0' stop-color='%23ff3b30'/><stop offset='.55' stop-color='%23f0342c' stop-opacity='.95'/><stop offset='1' stop-color='%23e5322d' stop-opacity='0'/></linearGradient>`;
-const defs = grad('t', 0, CAP - 3, 0, CAP + DEPTH + 4) + grad('b', 0, BASE + 3, 0, BASE - DEPTH - 3) + grad('l', 0, 0, 20, 0) + grad('r', W, 0, W - 18, 0);
+const cap = `<linearGradient id='c' gradientUnits='userSpaceOnUse' x1='0' y1='0' x2='0' y2='${H}'><stop offset='${(CAP - 3) / H}' stop-color='%23ff6b6b' stop-opacity='.55'/><stop offset='${(CAP + DEPTH * 0.85) / H}' stop-color='%23ff6b6b' stop-opacity='0'/><stop offset='${(BASE - DEPTH * 0.85) / H}' stop-color='%23ff6b6b' stop-opacity='0'/><stop offset='${(BASE + 3) / H}' stop-color='%23ff6b6b' stop-opacity='.55'/></linearGradient>`;
+const defs = cap + grad('t', 0, CAP - 3, 0, CAP + DEPTH + 4) + grad('b', 0, BASE + 3, 0, BASE - DEPTH - 3) + grad('l', 0, 0, 20, 0) + grad('r', W, 0, W - 18, 0);
 const flush = `<linearGradient id='f' x1='0' y1='0' x2='0' y2='1'><stop offset='${(CAP - 2) / H}' stop-color='%23e5322d' stop-opacity='.3'/><stop offset='${(CAP + 9) / H}' stop-color='%23e5322d' stop-opacity='0'/><stop offset='${(BASE - 9) / H}' stop-color='%23e5322d' stop-opacity='0'/><stop offset='${(BASE + 2) / H}' stop-color='%23e5322d' stop-opacity='.3'/></linearGradient>`;
-const body = ['t', 'b', 'l', 'r'].map((g) => `<path fill='url(%23${g})' d='${polys.filter((p) => p.group === g).map((p) => p.d).join('')}'/>`).join('');
+const body = ['c', 't', 'b', 'l', 'r'].map((g) => `<path fill='url(%23${g})' d='${polys.filter((p) => p.group === g).map((p) => p.d).join('')}'/>`).join('');
 const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${W} ${H}' preserveAspectRatio='none'><defs>${defs}</defs>${body}</svg>`;
 const uri = `url("data:image/svg+xml,${svg.replace(/</g, '%3C').replace(/>/g, '%3E')}")`;
 if (outSvg) fs.writeFileSync(outSvg, svg.replace(/%23/g, '#'));
