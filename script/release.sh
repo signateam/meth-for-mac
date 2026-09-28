@@ -5,7 +5,8 @@ usage() {
   echo "usage: $0 [RELEASE_NOTES]" >&2
   echo "  builds, signs, notarizes and staples dist/Meth.dmg, copies it to site/download/" >&2
   echo "  and regenerates site/appcast.xml; RELEASE_NOTES is passed to make_appcast.sh" >&2
-  echo "  env: METH_SIGN_IDENTITY (Developer ID), METH_NOTARY_PROFILE (notarytool keychain profile)" >&2
+  echo "  env: METH_SIGN_IDENTITY (Developer ID), METH_NOTARY_PROFILE (notarytool keychain profile)," >&2
+  echo "       METH_PYTHON (a python3 with dmgbuild installed; default /usr/bin/python3)" >&2
   exit 2
 }
 
@@ -50,6 +51,13 @@ notarize() {
   fi
 }
 
+PYTHON="${METH_PYTHON:-/usr/bin/python3}"
+step "Check dmgbuild"
+if ! "$PYTHON" -c 'import dmgbuild' 2>/dev/null; then
+  echo "dmgbuild is missing for $PYTHON; install it with: $PYTHON -m pip install --user dmgbuild" >&2
+  exit 1
+fi
+
 step "Check notarytool profile $NOTARY_PROFILE"
 if ! /usr/bin/xcrun notarytool history --keychain-profile "$NOTARY_PROFILE" >/dev/null; then
   echo "store it first (in an interactive terminal, not a '!' shell escape):" >&2
@@ -76,12 +84,11 @@ notarize "$APP_ZIP"
 /bin/rm -f "$APP_ZIP"
 
 step "Create, sign, notarize and staple the DMG"
-DMG_ROOT="$WORK_DIR/dmg"
-/bin/mkdir -p "$DMG_ROOT"
-/usr/bin/ditto "$APP_BUNDLE" "$DMG_ROOT/Meth.app"
-/bin/ln -s /Applications "$DMG_ROOT/Applications"
+# dmgbuild writes the install window (background, icon positions, hidden chrome)
+# straight into .DS_Store, without scripting Finder. Layout: script/dmg/settings.py.
 /bin/rm -f "$DMG"
-/usr/bin/hdiutil create -volname Meth -srcfolder "$DMG_ROOT" -fs HFS+ -format UDZO -ov "$DMG"
+"$PYTHON" -m dmgbuild -s "$ROOT_DIR/script/dmg/settings.py" \
+  -D app="$APP_BUNDLE" -D background="$ROOT_DIR/script/dmg/background.tiff" Meth "$DMG"
 /usr/bin/codesign --force --timestamp --sign "$IDENTITY" "$DMG"
 /usr/bin/codesign --verify --strict --verbose=2 "$DMG"
 notarize "$DMG"

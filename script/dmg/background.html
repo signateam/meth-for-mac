@@ -1,0 +1,69 @@
+<!doctype html>
+<!--
+  Meth DMG window background, 660x420 points.
+  Render at 1x and 2x with headless Chrome, then combine with tiffutil (see script/release.sh).
+  Icons sit at (170, 190) and (490, 190), 128pt, with Finder labels below; keep those areas clear.
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; padding: 0; width: 660px; height: 420px; overflow: hidden; background: #fdfbf8; }
+  svg { display: block; }
+  .hint { font-family: "Noteworthy", "Bradley Hand", "Marker Felt", cursive; font-size: 13px; fill: #b3aca6; letter-spacing: 0.2px; }
+</style>
+</head>
+<body>
+<svg width="660" height="420" viewBox="0 0 660 420" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- A little roughness so the strokes read as marker, not vector. -->
+    <filter id="marker" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="7" result="wobble"/>
+      <feDisplacementMap in="SourceGraphic" in2="wobble" scale="4" xChannelSelector="R" yChannelSelector="G" result="w"/>
+      <feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="1" seed="3" result="grain"/>
+      <feDisplacementMap in="w" in2="grain" scale="0.9" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="soft" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="1.6" flood-color="#2a1f1a" flood-opacity="0.28"/>
+    </filter>
+    <radialGradient id="warm" cx="50%" cy="42%" r="70%">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#f8f4ef"/>
+    </radialGradient>
+    <!-- macOS arrow pointer, tip at (0,0). -->
+    <path id="cursor" d="M0 0 L0 16.2 L3.9 12.5 L6.6 18.8 L9.3 17.6 L6.7 11.5 L12 11.5 Z"/>
+  </defs>
+
+  <rect width="660" height="420" fill="url(#warm)"/>
+
+  <!-- Hand-drawn arrow from Meth to Applications. -->
+  <g filter="url(#marker)" fill="none" stroke="#1b1716" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M258 196 C 276 162, 312 140, 346 141 C 372 142, 394 156, 404 176" stroke-width="3.4"/>
+    <path d="M388 171 C 395 175, 401 178, 405 182 C 406 173, 408 165, 411 158" stroke-width="3.4"/>
+  </g>
+
+  <!-- Shine strokes off the Applications folder's top-right corner. -->
+  <g filter="url(#marker)" fill="none" stroke="#1b1716" stroke-width="3" stroke-linecap="round">
+    <path d="M560 130 L573 116"/>
+    <path d="M567 146 L585 142"/>
+    <path d="M548 118 L552 101"/>
+  </g>
+
+  <!-- Hint below the arrow, between the icons. -->
+  <text class="hint" x="331" y="236" text-anchor="middle">drag Meth to Applications</text>
+
+  <!-- Scattered pointers around the app icon. -->
+  <g filter="url(#soft)" stroke="#ffffff" stroke-width="1.6" stroke-linejoin="round">
+    <use href="#cursor" fill="#e5322d" transform="translate(74 92) rotate(-14) scale(1.45)"/>
+    <use href="#cursor" fill="#1b1716" transform="translate(250 88) rotate(8) scale(1.3)"/>
+    <use href="#cursor" fill="#c9c3be" transform="translate(78 290) rotate(-4) scale(1.25)"/>
+  </g>
+
+  <!-- A tiny eye, the Meth mark, low in the right corner. -->
+  <g transform="translate(606 368) scale(1.2)" opacity="0.9">
+    <path d="M1.5 9.5C6 1 15 1 19.5 9.5C15 18 6 18 1.5 9.5Z" fill="#ffffff" stroke="#1b1716" stroke-width="1.5" stroke-linejoin="round"/>
+    <ellipse cx="10.5" cy="9.5" rx="2.4" ry="4.3" fill="#e5322d"/>
+  </g>
+</svg>
+</body>
+</html>
