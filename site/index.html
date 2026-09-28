@@ -95,11 +95,11 @@
   main { flex: 1; display: flex; flex-direction: column; justify-content: center; max-width: 1200px; width: 100%; margin: 0 auto; padding: 32px 0; }
 
   /* ---------- hero ---------- */
-  .visitors { margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13.5px; color: var(--muted); }
-  .visitors b { color: var(--fg); font-weight: 650; font-variant-numeric: tabular-nums; }
-  .visitors .live { width: 7px; height: 7px; border-radius: 50%; background: #34c759; box-shadow: 0 0 0 0 rgba(52, 199, 89, .5); animation: live 2s infinite; }
-  @keyframes live { 70% { box-shadow: 0 0 0 7px rgba(52, 199, 89, 0); } 100% { box-shadow: 0 0 0 0 rgba(52, 199, 89, 0); } }
-  @media (prefers-reduced-motion: reduce) { .visitors .live { animation: none; } }
+  .visitors { margin-top: 12px; text-align: center; font-size: 12.5px; color: var(--muted); opacity: .75; }
+  .visitors .n { display: inline-block; font-variant-numeric: tabular-nums; color: var(--muted); font-weight: 500; }
+  .visitors .n.tick { animation: tick .45s cubic-bezier(.3, .7, .2, 1); }
+  @keyframes tick { from { transform: translateY(45%); opacity: 0; } to { transform: none; opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .visitors .n.tick { animation: none; } }
   .hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: clamp(32px, 5vw, 72px); align-items: center; }
   h1 { font-size: clamp(48px, 6.2vw, 84px); line-height: .98; letter-spacing: -0.045em; font-weight: 750; text-wrap: balance; }
   .tagline { margin-top: 22px; font-size: clamp(24px, 2.6vw, 34px); line-height: 1.15; letter-spacing: -0.03em; font-weight: 650; max-width: 20ch; text-wrap: balance; }
@@ -440,7 +440,7 @@
           <button type="button" data-i="1">With Meth</button>
         </div>
       </div>
-      <p class="visitors" id="visitors" hidden><span class="live" aria-hidden="true"></span><span id="visitorCount"></span></p>
+      <p class="visitors" id="visitors" hidden><span class="n" id="visitorCount"></span> <span id="visitorNoun">people</span> considered trying Meth recently</p>
       </div>
     </section>
   </main>
@@ -682,16 +682,32 @@
   document.addEventListener('visibilitychange', () => { if (document.hidden) stopLoop(); else resumeAll(); });
 
 
-  // Visitors in the last 24 hours, from Cloudflare Web Analytics via /api/visitors.
-  fetch('/api/visitors', { signal: AbortSignal.timeout(4000) })
+  // Recent visitors, from Cloudflare Web Analytics via /api/visitors. The analytics lag a few
+  // minutes, so this visit is added a few seconds after load; after that the count only rises.
+  const visitorsEl = $('visitors'), countEl = $('visitorCount'), nounEl = $('visitorNoun');
+  let shown = 0, rolling = null;
+  const render = (n) => {
+    countEl.textContent = n.toLocaleString('en');
+    nounEl.textContent = n === 1 ? 'person' : 'people';
+    if (!reduce) { countEl.classList.remove('tick'); void countEl.offsetWidth; countEl.classList.add('tick'); }
+  };
+  const rollTo = (target) => {
+    if (target <= shown) return;
+    clearInterval(rolling);
+    if (reduce || target - shown > 12) { shown = target; render(shown); return; }
+    rolling = setInterval(() => { shown++; render(shown); if (shown >= target) clearInterval(rolling); }, 160);
+  };
+  const loadVisitors = () => fetch('/api/visitors', { signal: AbortSignal.timeout(4000) })
     .then((r) => (r.ok ? r.json() : null))
-    .then((d) => {
-      const n = d && Number.isInteger(d.visitors) ? d.visitors : 0;
-      if (n < 1) return;
-      $('visitorCount').innerHTML = `<b>${n.toLocaleString('en')}</b> ${n === 1 ? 'person' : 'people'} considered trying Meth in the last 24 hours`;
-      $('visitors').hidden = false;
-    })
-    .catch(() => {});
+    .then((d) => (d && Number.isInteger(d.visitors) ? d.visitors : null))
+    .catch(() => null);
+  loadVisitors().then((n) => {
+    if (n === null || n < 1) return;
+    shown = n; render(n); countEl.classList.remove('tick');
+    visitorsEl.hidden = false;
+    setTimeout(() => rollTo(shown + 1), 2500 + Math.random() * 2000);
+    setInterval(() => { if (!document.hidden) loadVisitors().then((m) => { if (m !== null) rollTo(m); }); }, 60000);
+  });
 
   setPhase(reduce ? 1 : 0);
 })();

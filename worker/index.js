@@ -1,8 +1,8 @@
 // Sends every request to https://trymeth.com, serves the static site, and answers
-// /api/visitors with the number of visits Cloudflare Web Analytics saw in the last 24 hours.
+// /api/visitors with the number of visits Cloudflare Web Analytics saw recently (the last 24 hours).
 const ACCOUNT = 'd801fe59adab888d7a28d3a7a7d181e4';
 const SITE_TAG = 'f91a6172b9d341c78547d934fe54cbc5'; // Web Analytics site for trymeth.com
-const CACHE_SECONDS = 300;
+const CACHE_SECONDS = 60;
 
 export default {
   async fetch(request, env, ctx) {
@@ -18,10 +18,12 @@ export default {
 };
 
 async function visitors(request, env, ctx) {
+  // Cloudflare's edge keeps the answer for a minute; browsers never cache it (the zone's
+  // browser-cache TTL would otherwise stretch any max-age to hours).
   const cache = caches.default;
   const key = new Request('https://trymeth.com/api/visitors');
   const cached = await cache.match(key);
-  if (cached) return cached;
+  if (cached) return fresh(await cached.text());
 
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   const query = `{ viewer { accounts(filter: { accountTag: "${ACCOUNT}" }) {
@@ -43,9 +45,11 @@ async function visitors(request, env, ctx) {
   if (count === null) {
     return Response.json({ error: 'unavailable' }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
   }
-  const response = Response.json({ visitors: count, window: '24h' }, {
-    headers: { 'Cache-Control': `public, max-age=${CACHE_SECONDS}` },
-  });
-  ctx.waitUntil(cache.put(key, response.clone()));
-  return response;
+  const body = JSON.stringify({ visitors: count, window: '24h' });
+  ctx.waitUntil(cache.put(key, new Response(body, { headers: { 'Cache-Control': `max-age=${CACHE_SECONDS}` } })));
+  return fresh(body);
+}
+
+function fresh(body) {
+  return new Response(body, { headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
 }
