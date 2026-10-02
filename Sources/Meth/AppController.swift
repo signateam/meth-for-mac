@@ -467,7 +467,7 @@ final class AppController: NSObject, NSApplicationDelegate {
     }
 
     @objc private func openX() {
-        if let url = URL(string: "https://x.com/tolibear_") { NSWorkspace.shared.open(url) }
+        if let url = URL(string: "https://x.com/tolimarchuk") { NSWorkspace.shared.open(url) }
     }
 
     @objc private func changeLogin(_ sender: NSButton) {
